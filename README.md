@@ -1,6 +1,6 @@
 # Sistema de Agendamento - Barbearia Gamboa
 
-Landing page moderna e elegante para barbearia com design premium em tons dourados e escuros.
+Landing page moderna para barbearia com design em tons dourados e escuros.
 
 ## 🎨 Design
 
@@ -45,10 +45,6 @@ http://localhost:3000
 - ✅ Design responsivo mobile-first
 - ✅ Tema escuro com acentos dourados
 
-### Logo Personalizado
-- ✅ SVG customizado com óculos, bigode e barba
-- ✅ Estilo vintage/retrô
-- ✅ Cores da marca (dourado/preto)
 
 ### Redes Sociais
 - ✅ Ícones dourados (Facebook, Instagram, TikTok)
@@ -64,7 +60,7 @@ http://localhost:3000
 - [ ] Formulário de contato
 - [ ] Sistema de avaliações
 
-## 📁 Estrutura do Projeto
+## 📁 Estrutura atual do Projeto
 
 ```
 ├── app/                    # App Router do Next.js
