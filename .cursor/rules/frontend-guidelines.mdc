@@ -1,0 +1,141 @@
+---
+alwaysApply: true
+description: Diretrizes completas de front-end para o projeto de sistema de agendamento de barbearia
+---
+
+# Diretrizes de Front-end - Sistema de Agendamento de Barbearia
+
+## Stack Tecnológica
+- **Next.js 15.5.4**: Framework React com App Router
+- **React 19.1.0**: Biblioteca UI com hooks modernos
+- **TypeScript 5**: Tipagem estática obrigatória
+- **Tailwind CSS 4**: Framework CSS utilitário
+- **Radix UI**: Componentes acessíveis e headless
+- **Lucide React**: Biblioteca de ícones
+
+## Estrutura de Arquivos
+```
+app/                    # App Router do Next.js
+├── layout.tsx         # Layout principal
+├── page.tsx           # Página inicial
+└── globals.css        # Estilos globais
+
+components/            # Componentes reutilizáveis
+├── ui/               # Componentes base (shadcn/ui)
+└── [feature]/        # Componentes específicos
+
+lib/                  # Utilitários e configurações
+├── utils.ts          # Funções utilitárias
+└── constants.ts      # Constantes da aplicação
+```
+
+## Padrões de Código
+
+### TypeScript
+- Sempre usar TypeScript com tipagem explícita
+- Criar interfaces para props de componentes
+- Usar tipos específicos ao invés de `any`
+- Implementar error boundaries para tratamento de erros
+
+### React
+- Usar function components com hooks
+- Implementar React.memo para otimização quando necessário
+- Usar useState, useEffect, useContext conforme apropriado
+- Preferir composição sobre herança
+
+### Tailwind CSS
+- Usar classes utilitárias do Tailwind
+- Criar variantes com class-variance-authority quando necessário
+- Implementar design system consistente
+- Usar responsividade mobile-first
+
+### Componentes
+- Seguir padrão shadcn/ui para componentes base
+- Criar componentes reutilizáveis e modulares
+- Implementar acessibilidade (ARIA, keyboard navigation)
+- Usar forwardRef quando necessário
+
+## Design System
+
+### Cores da Barbearia
+```css
+:root {
+  --primary: #D4AF37;      /* Dourado principal */
+  --primary-foreground: #000;
+  --secondary: #1A1A1A;    /* Preto/escuro */
+  --secondary-foreground: #fff;
+  --accent: #F4E4BC;       /* Dourado claro */
+  --background: #0A0A0A;   /* Fundo escuro */
+  --foreground: #FAFAFA;   /* Texto claro */
+}
+```
+
+### Tipografia
+- Fontes: Inter ou sistema sans-serif
+- Hierarquia: h1 (3xl), h2 (2xl), h3 (xl), body (base)
+- Peso: Regular (400), Medium (500), Bold (700)
+
+### Espaçamento
+- Usar escala do Tailwind: 1, 2, 3, 4, 6, 8, 12, 16, 24, 32
+- Padding/margin consistente entre componentes
+- Grid system responsivo
+
+## Funcionalidades da Barbearia
+
+### Landing Page
+- Hero section com imagem de fundo
+- Logo da barbearia (estilo vintage com óculos e bigode)
+- Redes sociais douradas
+- Call-to-action para agendamento
+- Cards de serviços/preços
+
+### Sistema de Agendamento
+- Calendário interativo
+- Seleção de serviços
+- Formulário de contato
+- Confirmação de agendamento
+- Histórico de agendamentos
+
+## Performance
+- Usar Next.js Image para otimização de imagens
+- Implementar lazy loading para componentes pesados
+- Minificar CSS e JavaScript
+- Usar Server Components quando possível
+
+## Acessibilidade
+- Implementar navegação por teclado
+- Usar ARIA labels apropriados
+- Garantir contraste adequado
+- Suporte a screen readers
+- Foco visível em elementos interativos
+
+## SEO
+- Meta tags apropriadas
+- Estrutura semântica HTML
+- Alt text para imagens
+- Open Graph tags
+- Schema markup para negócio local
+
+## Responsividade
+- Mobile-first approach
+- Breakpoints: sm (640px), md (768px), lg (1024px), xl (1280px)
+- Testar em dispositivos reais
+- Touch-friendly interfaces
+
+## Estado da Aplicação
+- Context API para estado global
+- useState para estado local
+- Custom hooks para lógica reutilizável
+- Persistência com localStorage quando necessário
+
+## Testes
+- Testes unitários com Jest
+- Testes de integração
+- Testes E2E com Playwright
+- Coverage mínimo de 80%
+
+## Deploy
+- Vercel para deploy automático
+- Variáveis de ambiente configuradas
+- Build otimizado para produção
+- Monitoramento de performance

@@ -1,0 +1,78 @@
+---
+description: Diretrizes para gerenciamento de imagens no projeto
+---
+
+# Gerenciamento de Imagens - Sistema de Agendamento
+
+## Diretrizes para Imagens
+
+### Armazenamento Local
+- **SEMPRE** baixar e salvar imagens localmente no projeto
+- **NUNCA** usar URLs externas diretamente no código
+- Armazenar todas as imagens na pasta `public/`
+- Organizar por categoria: `public/images/`, `public/icons/`, `public/logos/`
+
+### Estrutura de Pastas
+```
+public/
+├── images/           # Imagens de conteúdo
+│   ├── barber/      # Imagens relacionadas a barbeiros
+│   ├── services/    # Imagens de serviços
+│   └── gallery/     # Galeria de fotos
+├── icons/           # Ícones e símbolos
+├── logos/           # Logos e marcas
+└── backgrounds/     # Imagens de fundo
+```
+
+### Otimização de Imagens
+- **Formato**: Preferir JPG para fotos, PNG para transparência, SVG para ícones
+- **Tamanho**: Máximo 2MB por imagem
+- **Dimensões**: Otimizar para diferentes breakpoints
+- **Alt Text**: Sempre incluir descrição acessível
+
+### Uso no Next.js
+```jsx
+import Image from 'next/image';
+
+// ✅ Correto - imagem local
+<Image
+  src="/images/barber/professional-barber.jpg"
+  alt="Barbeiro profissional cortando cabelo"
+  width={800}
+  height={600}
+  priority // Para imagens acima da dobra
+/>
+
+// ❌ Incorreto - URL externa
+<Image src="https://external-site.com/image.jpg" />
+```
+
+### Processo de Adição de Imagens
+1. **Baixar** a imagem para o computador
+2. **Otimizar** se necessário (redimensionar, comprimir)
+3. **Salvar** na pasta apropriada em `public/`
+4. **Referenciar** no código usando caminho relativo
+5. **Testar** o carregamento e responsividade
+
+### Imagens Atuais no Projeto
+- `public/barber-image.jpg` - Imagem principal do barbeiro
+- `public/logo-barbearia.svg` - Logo da barbearia
+
+### Comandos Úteis
+```bash
+# Baixar imagem do Unsplash
+curl -o public/images/barber/nome-arquivo.jpg "URL_DA_IMAGEM"
+
+# Verificar tamanho do arquivo
+ls -lh public/images/barber/
+
+# Otimizar imagem (se ImageMagick estiver instalado)
+convert input.jpg -quality 85 -resize 800x600 output.jpg
+```
+
+### Boas Práticas
+- **Nomes descritivos**: `barber-cutting-hair.jpg` ao invés de `img1.jpg`
+- **Versionamento**: Incluir imagens no controle de versão
+- **Backup**: Manter backup das imagens originais
+- **Licenças**: Verificar licenças de uso das imagens
+- **Acessibilidade**: Sempre incluir alt text descritivo

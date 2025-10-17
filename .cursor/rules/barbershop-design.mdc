@@ -1,0 +1,109 @@
+---
+description: Guia de design específico para a landing page da barbearia
+---
+
+# Design da Barbearia Gamboa
+
+## Identidade Visual
+
+### Logo
+- **Estilo**: Vintage/retrô com elementos clássicos
+- **Elementos**: Óculos wayfarer, bigode handlebar, barba arredondada
+- **Cores**: Preto (#0A0A0A) e dourado (#D4AF37)
+- **Tipografia**: Sans-serif moderna, bold para destaque
+- **Formato**: Octogonal/badge style
+
+### Paleta de Cores
+```css
+/* Cores Principais */
+--primary: #D4AF37;      /* Dourado principal */
+--secondary: #1A1A1A;    /* Preto/escuro */
+--accent: #F4E4BC;       /* Dourado claro */
+--background: #0A0A0A;   /* Fundo escuro */
+--foreground: #FAFAFA;   /* Texto claro */
+```
+
+### Layout da Landing Page
+
+#### Header
+- **Logo**: Esquerda superior com ícone circular dourado
+- **Redes Sociais**: Direita superior (Facebook, Instagram, TikTok)
+- **Posicionamento**: Absolute, z-index alto
+- **Estilo**: Minimalista, sem navbar de navegação
+
+#### Painel Esquerdo (Conteúdo)
+- **Proporção**: 2/5 da tela
+- **Fundo**: Preto sólido (#0A0A0A)
+- **Headline**: "Deixando você bonito é nosso objetivo"
+- **Hierarquia**: Texto branco, palavra-chave em dourado
+- **CTA**: Botões primário e outline
+- **Informações**: Ícones com texto descritivo
+
+#### Painel Direito (Visual)
+- **Proporção**: 3/5 da tela
+- **Fundo**: Gradiente escuro com padrão sutil
+- **Elementos Flutuantes**:
+  - Card "Pacote Mensal" (top-right)
+  - Card de avaliação (bottom-right)
+  - Logo central da barbearia (centro)
+
+### Elementos de Design
+
+#### Cards Flutuantes
+- **Estilo**: Background dourado, texto preto
+- **Sombras**: Elevação sutil
+- **Bordas**: Arredondadas (rounded-lg)
+- **Padding**: Generoso para respiração
+
+#### Botões
+- **Primário**: Fundo dourado, texto preto
+- **Outline**: Borda dourada, texto dourado
+- **Hover**: Transições suaves
+- **Tamanho**: Large (px-8 py-6)
+
+#### Ícones
+- **Redes Sociais**: Lucide React, cor dourada
+- **Informações**: MapPin, Clock em dourado
+- **Avaliação**: Estrelas preenchidas
+
+### Tipografia
+- **Fontes**: Inter/Geist Sans (sistema)
+- **Headline**: text-5xl lg:text-7xl, font-bold
+- **Body**: text-lg, leading-relaxed
+- **Caption**: text-sm, text-muted-foreground
+
+### Responsividade
+- **Mobile**: Stack vertical, padding reduzido
+- **Tablet**: Grid adaptativo
+- **Desktop**: Grid 5 colunas (2+3)
+- **Breakpoints**: sm, md, lg, xl
+
+### Elementos Interativos
+- **Hover States**: Transições suaves (transition-colors)
+- **Focus States**: Ring dourado
+- **Loading States**: Skeleton ou spinner
+- **Error States**: Feedback visual claro
+
+### Acessibilidade
+- **Contraste**: WCAG AA compliant
+- **Navegação**: Keyboard-friendly
+- **Screen Readers**: ARIA labels apropriados
+- **Focus**: Visible focus indicators
+
+### Performance
+- **Imagens**: Next.js Image component
+- **Lazy Loading**: Componentes pesados
+- **CSS**: Tailwind purging
+- **Fonts**: Google Fonts otimizadas
+
+### SEO
+- **Meta Tags**: Título e descrição específicos
+- **Structured Data**: LocalBusiness schema
+- **Open Graph**: Imagens e descrições
+- **Canonical**: URL principal
+
+### Conteúdo em Português
+- **Tom**: Profissional e acolhedor
+- **Vocabulário**: Técnico mas acessível
+- **Call-to-Actions**: Diretos e claros
+- **Depoimentos**: Autênticos e específicos
