@@ -45,8 +45,8 @@ export default function Home() {
       {/* Main Content */}
       <main className="grid grid-cols-1 lg:grid-cols-5 min-h-screen mt-0">
         {/* Left Panel - Conteúdo */}
-        <div className="lg:col-span-2 bg-background flex flex-col justify-center p-8 lg:p-12 relative pt-24">
-          <div className="max-w-lg">
+        <div className="lg:col-span-2 bg-background flex flex-col justify-center items-center lg:items-start p-8 lg:p-12 relative pt-24">
+          <div className="max-w-lg w-full mx-auto text-center lg:text-left">
             {/* Headline */}
             <h1 className="text-4xl lg:text-6xl font-black leading-[0.9] mb-8 tracking-tight">
               <span className="block text-foreground uppercase">Aqui, o foco é</span>
@@ -62,7 +62,7 @@ export default function Home() {
             </p>
 
             {/* Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-6 text-lg font-medium">
                 Agendar Horário
               </Button>
@@ -88,8 +88,8 @@ export default function Home() {
             <div className="absolute inset-0 bg-black/20"></div>
           </div>
 
-          {/* Card Pacote Mensal - Top Right */}
-          <div className="absolute top-20 right-8 z-10">
+          {/* Card Pacote Mensal - Top Right (oculto em telas menores) */}
+          <div className="hidden lg:block absolute top-20 right-8 z-10">
             <div className="bg-primary text-primary-foreground p-4 rounded-lg shadow-xl max-w-xs">
               <div className="flex items-center space-x-3 mb-2">
                 <div className="w-8 h-8 bg-primary-foreground/20 rounded-full flex items-center justify-center">
@@ -101,8 +101,8 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Card de Avaliação - Bottom Right */}
-          <div className="absolute bottom-20 right-8 max-w-sm z-10">
+          {/* Card de Avaliação - Bottom Right (oculto em telas menores) */}
+          <div className="hidden lg:block absolute bottom-20 right-8 max-w-sm z-10">
             <div className="bg-primary text-primary-foreground p-6 rounded-lg shadow-xl">
               <div className="flex items-center justify-between mb-4">
                 <span className="font-semibold text-primary-foreground">Recados</span>
