@@ -57,10 +57,10 @@ export function ForgotPasswordForm({ className, ...props }: React.ComponentProps
         </Card>
       ) : (
         <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl">Redefinir senha</CardTitle>
-            <CardDescription>
-              Digite seu e-mail e enviaremos um link para redefinir sua senha
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl">Esqueceu sua senha?</CardTitle>
+            <CardDescription className="text-yellow-400 text-center text-sm sm:text-base leading-snug px-4 max-w-[32ch] mx-auto">
+              Digite seu e-mail para receber um link de recuperação
             </CardDescription>
           </CardHeader>
           <CardContent>
