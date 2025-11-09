@@ -8,14 +8,14 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ e
       <div className="w-full max-w-sm">
         <div className="flex flex-col gap-6">
           <Card>
-            <CardHeader>
-              <CardTitle className="text-2xl">Ops, algo deu errado.</CardTitle>
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl text-yellow-400">Ops, algo deu errado!</CardTitle>
             </CardHeader>
             <CardContent>
               {params?.error ? (
                 <p className="text-sm text-muted-foreground">Código do erro: {params.error}</p>
               ) : (
-                <p className="text-sm text-muted-foreground">Ocorreu um erro inesperado.</p>
+                <p className="text-sm text-muted-foreground text-white text-center">Ocorreu um erro inesperado.</p>
               )}
             </CardContent>
           </Card>

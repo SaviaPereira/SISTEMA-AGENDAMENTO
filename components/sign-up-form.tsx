@@ -57,8 +57,8 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
     <div className={cn('flex flex-col gap-6', className)} {...props}>
       <Card className="border border-primary bg-card text-card-foreground">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Criar conta</CardTitle>
-          <CardDescription>Crie uma nova conta</CardDescription>
+          <CardTitle className="text-2xl text-yellow-400">Criar conta</CardTitle>
+          <CardDescription className="text-white">Crie uma nova conta</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignUp}>

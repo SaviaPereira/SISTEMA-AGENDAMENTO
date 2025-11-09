@@ -35,8 +35,8 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
         password,
       })
       if (error) throw error
-      // Update this route to redirect to an authenticated route. The user already has an active session.
-      router.push('/protected')
+      
+      router.push('/dashboard')
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : 'An error occurred')
     } finally {
@@ -48,8 +48,8 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
     <div className={cn('flex flex-col gap-6', className)} {...props}>
       <Card className="border border-primary bg-card text-card-foreground">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Entrar</CardTitle>
-          <CardDescription>Informe seu e-mail para acessar sua conta</CardDescription>
+          <CardTitle className="text-2xl text-yellow-400">Painel Administrativo</CardTitle>
+          <CardDescription className="text-white">Informe seu e-mail para acessar sua conta</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin}>
@@ -87,12 +87,6 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? 'Entrando...' : 'Entrar'}
               </Button>
-            </div>
-            <div className="mt-4 text-center text-sm">
-              Não tem uma conta?{' '}
-              <Link href="/auth/sign-up" className="underline underline-offset-4">
-                Cadastre-se
-              </Link>
             </div>
           </form>
         </CardContent>

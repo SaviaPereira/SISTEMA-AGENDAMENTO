@@ -58,8 +58,8 @@ export function ForgotPasswordForm({ className, ...props }: React.ComponentProps
       ) : (
         <Card>
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Esqueceu sua senha?</CardTitle>
-            <CardDescription className="text-yellow-400 text-center text-sm sm:text-base leading-snug px-4 max-w-[32ch] mx-auto">
+            <CardTitle className="text-2xl text-yellow-400">Esqueceu sua senha?</CardTitle>
+            <CardDescription className="text-white text-center text-sm sm:text-base leading-snug px-4 max-w-[32ch] mx-auto">
               Digite seu e-mail para receber um link de recuperação
             </CardDescription>
           </CardHeader>

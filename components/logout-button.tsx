@@ -1,17 +1,26 @@
-'use client'
+"use client"
 
-import { createClient } from '@/lib/client'
-import { Button } from '@/components/ui/button'
-import { useRouter } from 'next/navigation'
+import type { ComponentProps } from "react"
 
-export function LogoutButton() {
+import { Button } from "@/components/ui/button"
+import { createClient } from "@/lib/client"
+import { useRouter } from "next/navigation"
+
+type LogoutButtonProps = ComponentProps<typeof Button>
+
+export function LogoutButton({ children, onClick, ...props }: LogoutButtonProps) {
   const router = useRouter()
 
   const logout = async () => {
     const supabase = createClient()
     await supabase.auth.signOut()
-    router.push('/auth/login')
+    onClick?.()
+    router.push("/auth/login")
   }
 
-  return <Button onClick={logout}>Logout</Button>
+  return (
+    <Button onClick={logout} {...props}>
+      {children ?? "Logout"}
+    </Button>
+  )
 }
