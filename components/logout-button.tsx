@@ -1,6 +1,6 @@
 "use client"
 
-import type { ComponentProps } from "react"
+import type { ComponentProps, MouseEvent } from "react"
 
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/client"
@@ -11,10 +11,14 @@ type LogoutButtonProps = ComponentProps<typeof Button>
 export function LogoutButton({ children, onClick, ...props }: LogoutButtonProps) {
   const router = useRouter()
 
-  const logout = async () => {
+  const logout = async (event: MouseEvent<HTMLButtonElement>) => {
+    onClick?.(event)
+    if (event.defaultPrevented) {
+      return
+    }
+
     const supabase = createClient()
     await supabase.auth.signOut()
-    onClick?.()
     router.push("/auth/login")
   }
 
