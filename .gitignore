@@ -43,5 +43,9 @@ next-env.d.ts
 *.swo
 *~
 
+# Cursor MCP (contém credenciais sensíveis)
+.cursor/mcp.json
+
 # OS
 Thumbs.db
+supabase/.temp/
