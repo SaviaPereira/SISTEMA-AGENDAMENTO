@@ -1,6 +1,4 @@
-import type { JSX } from "react";
-
-export default function BusinessHoursPage(): JSX.Element {
+export default function BusinessHoursPage() {
   return (
     <main className="min-h-screen bg-background text-foreground">
       <section className="container mx-auto flex flex-col gap-6 px-6 py-16">
@@ -49,6 +47,5 @@ export default function BusinessHoursPage(): JSX.Element {
         </div>
       </section>
     </main>
-  );
+  )
 }
-
