@@ -1,3 +1,5 @@
+import type { JSX } from "react";
+
 export default function BusinessHoursPage(): JSX.Element {
   return (
     <main className="min-h-screen bg-background text-foreground">
