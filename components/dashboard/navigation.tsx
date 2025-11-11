@@ -1,5 +1,7 @@
 "use client";
 
+import type { ComponentType, JSX } from "react";
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -9,7 +11,7 @@ import { cn } from "@/lib/utils";
 
 type DashboardNavIcon = "layout-grid" | "scissors" | "calendar-days" | "clock";
 
-const iconComponents: Record<DashboardNavIcon, React.ComponentType<{ className?: string }>> = {
+const iconComponents: Record<DashboardNavIcon, ComponentType<{ className?: string }>> = {
   "layout-grid": LayoutGrid,
   scissors: Scissors,
   "calendar-days": CalendarDays,

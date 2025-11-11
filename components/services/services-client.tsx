@@ -1,5 +1,6 @@
 "use client";
 
+import type { JSX } from "react";
 import { useEffect, useMemo, useState } from "react";
 
 import { LogOut, Pencil, Plus, Trash2, X } from "lucide-react";
