@@ -1,6 +1,11 @@
 ﻿import { redirect } from "next/navigation"
 
 import { LogoutButton } from "@/components/logout-button"
+import {
+  MobileNav,
+  SidebarNav,
+  type DashboardNavItem,
+} from "@/components/dashboard/navigation"
 import { cn } from "@/lib/utils"
 import {
   Card,
@@ -10,13 +15,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { createClient } from "@/lib/server"
-import {
-  CalendarDays,
-  Clock3,
-  LayoutGrid,
-  LogOut,
-  Scissors,
-} from "lucide-react"
+import { LogOut } from "lucide-react"
 
 const stats = [
   {
@@ -42,11 +41,11 @@ const appointments = [
   { client: "Eduardo", time: "18:00", service: "Corte + Barba" },
 ]
 
-const navigationItems = [
-  { label: "Dashboard", icon: LayoutGrid, href: "#", active: true },
-  { label: "Serviços", icon: Scissors, href: "#", active: false },
-  { label: "Agendamentos", icon: CalendarDays, href: "#", active: false },
-  { label: "Horários", icon: Clock3, href: "#", active: false },
+const navigationItems: DashboardNavItem[] = [
+  { label: "Dashboard", icon: "layout-grid", href: "/dashboard" },
+  { label: "Serviços", icon: "scissors", href: "/services" },
+  { label: "Agendamentos", icon: "calendar-days", href: "/schedules" },
+  { label: "Horários", icon: "clock", href: "/business-hours" },
 ]
 
 export default async function DashboardPage() {
@@ -76,13 +75,7 @@ export default async function DashboardPage() {
             <h1 className="mt-2 text-2xl font-black text-yellow-400">Painel</h1>
           </div>
 
-          <nav className="flex flex-col gap-2 text-sm font-medium text-white/70">
-            {navigationItems.map((item) => (
-              <NavItem key={item.label} active={item.active} icon={item.icon}>
-                {item.label}
-              </NavItem>
-            ))}
-          </nav>
+          <SidebarNav items={navigationItems} />
         </div>
       </aside>
 
@@ -165,52 +158,7 @@ export default async function DashboardPage() {
         </section>
       </main>
 
-      <nav className="fixed inset-x-0 bottom-0 z-20 flex items-center justify-evenly border-t border-white/10 bg-black/80 px-4 py-3 backdrop-blur lg:hidden">
-        {navigationItems.map((item) => {
-          const Icon = item.icon
-          return (
-            <a
-              key={item.label}
-              href={item.href}
-              className={cn(
-                "flex flex-col items-center gap-1 text-xs font-medium transition",
-                item.active ? "text-yellow-400" : "text-white/60 hover:text-white/80"
-              )}
-            >
-              <Icon className={cn("h-5 w-5", item.active ? "text-yellow-400" : "text-white/70")} />
-              <span>{item.label}</span>
-            </a>
-          )
-        })}
-      </nav>
+      <MobileNav items={navigationItems} />
     </div>
   )
 }
-
-function NavItem({
-  children,
-  active = false,
-  icon: Icon,
-}: {
-  children: React.ReactNode
-  active?: boolean
-  icon?: React.ComponentType<{ className?: string }>
-}) {
-  return (
-    <a
-      href="#"
-      className={cn(
-        "flex items-center gap-3 rounded-lg px-4 py-3 transition",
-        active
-          ? "bg-white/10 text-white shadow-inner shadow-white/5"
-          : "text-white/60 hover:bg-white/5 hover:text-white"
-      )}
-    >
-      {Icon ? <Icon className={cn("h-4 w-4", active ? "text-yellow-400" : "text-white/50")} /> : null}
-      {children}
-    </a>
-  )
-}
-
-
-
