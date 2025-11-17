@@ -45,6 +45,7 @@ const navigationItems: DashboardNavItem[] = [
   { label: "Dashboard", icon: "layout-grid", href: "/dashboard" },
   { label: "Serviços", icon: "scissors", href: "/services" },
   { label: "Agendamentos", icon: "calendar-days", href: "/schedules" },
+  { label: "Clientes", icon: "user", href: "/clients" },
   { label: "Horários", icon: "clock", href: "/business-hours" },
 ]
 
