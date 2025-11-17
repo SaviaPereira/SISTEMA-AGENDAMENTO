@@ -34,6 +34,7 @@ export function ServicesClient({ initialServices }: ServicesClientProps): JSX.El
     { label: "Dashboard", icon: "layout-grid", href: "/dashboard" },
     { label: "Serviços", icon: "scissors", href: "/services" },
     { label: "Agendamentos", icon: "calendar-days", href: "/schedules" },
+    { label: "Clientes", icon: "user", href: "/clients" },
     { label: "Horários", icon: "clock", href: "/business-hours" },
   ];
 
@@ -202,7 +203,20 @@ export function ServicesClient({ initialServices }: ServicesClientProps): JSX.El
       const { error: deleteErr } = await supabase.from("services").delete().eq("id", deleteTarget.id);
 
       if (deleteErr) {
-        setDeleteError(deleteErr.message ?? "Não foi possível remover o serviço.");
+        // Verifica se o erro é relacionado a foreign key constraint
+        const errorMessage = deleteErr.message ?? "";
+        const isForeignKeyError =
+          errorMessage.includes("foreign key constraint") ||
+          errorMessage.includes("schedules_service_id_fkey") ||
+          deleteErr.code === "23503";
+
+        if (isForeignKeyError) {
+          setDeleteError(
+            `Não é possível excluir o serviço "${deleteTarget.name}" porque existem agendamentos associados a ele. Remova ou altere os agendamentos antes de excluir o serviço.`,
+          );
+        } else {
+          setDeleteError(deleteErr.message ?? "Não foi possível remover o serviço.");
+        }
         return;
       }
 
@@ -424,7 +438,9 @@ export function ServicesClient({ initialServices }: ServicesClientProps): JSX.El
               </p>
             </header>
 
-            {deleteError ? <p className="mt-4 text-sm font-medium text-red-400">{deleteError}</p> : null}
+            {deleteError ? (
+              <p className="mt-4 text-sm font-medium text-red-400 leading-relaxed break-words">{deleteError}</p>
+            ) : null}
 
             <div className="mt-6 flex justify-end gap-3">
               <Button
