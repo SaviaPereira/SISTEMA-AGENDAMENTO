@@ -16,6 +16,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/client";
 import { cn } from "@/lib/utils";
+import {
+  ScheduleFiltersComponent,
+  type ScheduleFilters,
+} from "@/components/schedules/schedule-filters";
 
 type Schedule = {
   id: string;
@@ -67,7 +71,7 @@ export function SchedulesClient({ initialSchedules }: SchedulesClientProps): JSX
     { label: "Serviços", icon: "scissors", href: "/services" },
     { label: "Agendamentos", icon: "calendar-days", href: "/schedules" },
     { label: "Clientes", icon: "user", href: "/clients" },
-    { label: "Horários", icon: "clock", href: "/business-hours" },
+    { label: "Configurações", icon: "settings", href: "/config" },
   ];
 
   const [schedules, setSchedules] = useState<Schedule[]>(initialSchedules);
@@ -100,6 +104,22 @@ export function SchedulesClient({ initialSchedules }: SchedulesClientProps): JSX
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; variant: "success" | "error" } | null>(null);
+  const [filters, setFilters] = useState<ScheduleFilters>({
+    searchClient: "",
+    selectedService: "",
+    selectedStatus: "",
+    dateFrom: "",
+    dateTo: "",
+    period: "all",
+  });
+
+  // Estados para modal de criação de cliente
+  const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
+  const [clientName, setClientName] = useState("");
+  const [clientEmail, setClientEmail] = useState("");
+  const [clientWhatsapp, setClientWhatsapp] = useState("");
+  const [isSavingClient, setIsSavingClient] = useState(false);
+  const [clientError, setClientError] = useState<string | null>(null);
 
   const supabase = useMemo(() => createClient(), []);
 
@@ -136,6 +156,110 @@ export function SchedulesClient({ initialSchedules }: SchedulesClientProps): JSX
     return `https://wa.me/55${digitsOnly}`;
   }
 
+  function handleClientWhatsAppChange(value: string): void {
+    // Remove todos os caracteres não numéricos
+    const digitsOnly = value.replace(/\D/g, "");
+    
+    // Limita a 11 dígitos
+    const limitedDigits = digitsOnly.slice(0, 11);
+    
+    // Formata conforme o usuário digita
+    let formatted = "";
+    
+    if (limitedDigits.length === 0) {
+      formatted = "";
+    } else if (limitedDigits.length <= 2) {
+      // (XX
+      formatted = `(${limitedDigits}`;
+    } else if (limitedDigits.length <= 7) {
+      // (XX) XXXXX
+      formatted = `(${limitedDigits.slice(0, 2)}) ${limitedDigits.slice(2)}`;
+    } else {
+      // (XX) XXXXX-XXXX
+      formatted = `(${limitedDigits.slice(0, 2)}) ${limitedDigits.slice(2, 7)}-${limitedDigits.slice(7)}`;
+    }
+    
+    setClientWhatsapp(formatted);
+  }
+
+  function openClientDialog(): void {
+    setIsClientDialogOpen(true);
+    setClientName("");
+    setClientEmail("");
+    setClientWhatsapp("");
+    setClientError(null);
+  }
+
+  function closeClientDialog(): void {
+    if (isSavingClient) return;
+    setIsClientDialogOpen(false);
+    setClientName("");
+    setClientEmail("");
+    setClientWhatsapp("");
+    setClientError(null);
+  }
+
+  async function handleCreateClient(event: React.FormEvent<HTMLFormElement>): Promise<void> {
+    event.preventDefault();
+
+    const trimmedName = clientName.trim();
+
+    if (!trimmedName) {
+      setClientError("Informe o nome do cliente.");
+      return;
+    }
+
+    setIsSavingClient(true);
+    setClientError(null);
+
+    // Remove formatação do WhatsApp antes de salvar (apenas dígitos)
+    const whatsappDigitsOnly = clientWhatsapp.replace(/\D/g, "");
+
+    try {
+      const { data, error: insertError } = await supabase
+        .from("clients")
+        .insert([
+          {
+            name: trimmedName,
+            email: clientEmail.trim() || null,
+            whatsapp: whatsappDigitsOnly || null,
+          },
+        ])
+        .select("id, name")
+        .single();
+
+      if (insertError) {
+        console.error("[schedules] erro ao criar cliente:", insertError);
+        setClientError(insertError.message ?? "Não foi possível criar o cliente.");
+        return;
+      }
+
+      if (!data) {
+        console.error("[schedules] erro: dados não retornados após inserção");
+        setClientError("Não foi possível criar o cliente. Dados não retornados.");
+        return;
+      }
+
+      // Adicionar o novo cliente à lista
+      const newClient: Client = {
+        id: data.id,
+        name: data.name,
+      };
+
+      setClients((prev) => [newClient, ...prev]);
+      
+      // Selecionar o cliente recém-criado
+      setSelectedClientId(data.id);
+      
+      // Fechar o modal de cliente
+      closeClientDialog();
+      
+      setToast({ message: "Cliente cadastrado com sucesso.", variant: "success" });
+    } finally {
+      setIsSavingClient(false);
+    }
+  }
+
   useEffect(() => {
     async function loadClientsAndServices() {
       const [clientsResult, servicesResult] = await Promise.all([
@@ -157,10 +281,9 @@ export function SchedulesClient({ initialSchedules }: SchedulesClientProps): JSX
       }
     }
 
-    if (isDialogOpen) {
-      loadClientsAndServices();
-    }
-  }, [isDialogOpen, supabase]);
+    // Carregar sempre para ter disponível nos filtros
+    loadClientsAndServices();
+  }, [supabase]);
 
   function handleValorChange(value: string): void {
     const digitsOnly = value.replace(/\D/g, "");
@@ -402,12 +525,11 @@ export function SchedulesClient({ initialSchedules }: SchedulesClientProps): JSX
 
   const formattedSchedules = useMemo(() => {
     return schedules.map((schedule) => {
-      const date = new Date(schedule.dataAgendada);
-      const formattedDate = date.toLocaleDateString("pt-BR", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      });
+      // Formatar data diretamente da string para evitar problemas de timezone
+      // A data vem no formato YYYY-MM-DD ou YYYY-MM-DDTHH:mm:ss
+      const dateStr = schedule.dataAgendada.split("T")[0]; // Pega só a parte da data
+      const [year, month, day] = dateStr.split("-");
+      const formattedDate = `${day}/${month}/${year}`;
 
       const [hours, minutes] = schedule.horaAgendada.split(":");
       const formattedTime = `${hours}:${minutes}`;
@@ -419,6 +541,105 @@ export function SchedulesClient({ initialSchedules }: SchedulesClientProps): JSX
       };
     });
   }, [schedules]);
+
+  // Função auxiliar para normalizar data para formato YYYY-MM-DD
+  // IMPORTANTE: Sempre trabalhar com strings para evitar problemas de timezone
+  const normalizeDate = (dateString: string): string => {
+    if (!dateString) return "";
+    
+    // Remover espaços em branco
+    const trimmed = dateString.trim();
+    
+    // Se já está no formato YYYY-MM-DD, retorna direto
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+      return trimmed;
+    }
+    
+    // Se tem "T" (formato ISO), pega só a parte da data ANTES do T
+    if (trimmed.includes("T")) {
+      const datePart = trimmed.split("T")[0].trim();
+      // Garantir que está no formato correto
+      if (/^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
+        return datePart;
+      }
+    }
+    
+    // Se tem espaço (formato alternativo), pega a primeira parte
+    if (trimmed.includes(" ")) {
+      const datePart = trimmed.split(" ")[0].trim();
+      if (/^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
+        return datePart;
+      }
+    }
+    
+    // Último recurso: tentar extrair YYYY-MM-DD usando regex
+    const dateMatch = trimmed.match(/(\d{4})-(\d{2})-(\d{2})/);
+    if (dateMatch) {
+      return dateMatch[0]; // Retorna YYYY-MM-DD
+    }
+    
+    // Se não conseguir, retorna string vazia
+    // Isso não deve acontecer em condições normais
+    return "";
+  };
+
+  // Lógica de filtragem
+  const filteredSchedules = useMemo(() => {
+    let filtered = formattedSchedules;
+
+    // Filtro por nome do cliente
+    if (filters.searchClient.trim()) {
+      const searchLower = filters.searchClient.toLowerCase().trim();
+      filtered = filtered.filter((schedule) =>
+        schedule.clientName.toLowerCase().includes(searchLower),
+      );
+    }
+
+    // Filtro por serviço
+    if (filters.selectedService) {
+      filtered = filtered.filter((schedule) => schedule.serviceId === filters.selectedService);
+    }
+
+    // Filtro por status
+    if (filters.selectedStatus) {
+      filtered = filtered.filter((schedule) => schedule.status === filters.selectedStatus);
+    }
+
+    // Filtro por data
+    // Comparar apenas a parte da data (YYYY-MM-DD) para evitar problemas de timezone
+    if (filters.dateFrom || filters.dateTo) {
+      filtered = filtered.filter((schedule) => {
+        const scheduleDateStr = normalizeDate(schedule.dataAgendada);
+        const fromDateStr = filters.dateFrom ? normalizeDate(filters.dateFrom) : "";
+        const toDateStr = filters.dateTo ? normalizeDate(filters.dateTo) : "";
+        
+        // Se ambas as datas são iguais (ex: "Hoje"), fazer comparação exata
+        if (fromDateStr && toDateStr && fromDateStr === toDateStr) {
+          return scheduleDateStr === fromDateStr;
+        }
+        
+        // Caso contrário, usar range
+        const matchesFrom = !fromDateStr || scheduleDateStr >= fromDateStr;
+        const matchesTo = !toDateStr || scheduleDateStr <= toDateStr;
+        
+        return matchesFrom && matchesTo;
+      });
+    }
+
+    return filtered;
+  }, [formattedSchedules, filters]);
+
+  // Verificar se há filtros ativos
+  const hasActiveFilters = useMemo(() => {
+    return (
+      filters.searchClient.trim() !== "" ||
+      filters.selectedService !== "" ||
+      filters.selectedStatus !== "" ||
+      filters.dateFrom !== "" ||
+      filters.dateTo !== "" ||
+      filters.period !== "all"
+    );
+  }, [filters]);
 
   return (
     <div className="flex min-h-screen flex-col bg-[#050505] text-foreground lg:flex-row">
@@ -460,7 +681,14 @@ export function SchedulesClient({ initialSchedules }: SchedulesClientProps): JSX
           </div>
         </header>
 
-        <div className="overflow-x-auto overflow-hidden rounded-2xl lg:rounded-3xl border border-white/10 bg-black/40 shadow-inner shadow-black/20">
+        <ScheduleFiltersComponent
+          filters={filters}
+          onFiltersChange={setFilters}
+          services={services.map((s) => ({ id: s.id, name: s.name }))}
+          hasActiveFilters={hasActiveFilters}
+        />
+
+        <div className="mt-6 overflow-x-auto overflow-hidden rounded-2xl lg:rounded-3xl border border-white/10 bg-black/40 shadow-inner shadow-black/20">
           <table className="min-w-full divide-y divide-white/10 text-left">
             <thead className="bg-white/[0.03] text-[10px] sm:text-xs uppercase tracking-[0.2em] sm:tracking-[0.3em] text-white/50">
               <tr>
@@ -474,14 +702,16 @@ export function SchedulesClient({ initialSchedules }: SchedulesClientProps): JSX
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.08] text-xs sm:text-sm text-white/80">
-              {formattedSchedules.length === 0 ? (
+              {filteredSchedules.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-4 py-6 sm:px-6 sm:py-8 text-center text-white/60 text-xs sm:text-sm">
-                    Nenhum agendamento cadastrado até o momento.
+                    {hasActiveFilters
+                      ? "Nenhum agendamento encontrado com os filtros aplicados."
+                      : "Nenhum agendamento cadastrado até o momento."}
                   </td>
                 </tr>
               ) : (
-                formattedSchedules.map((schedule) => (
+                filteredSchedules.map((schedule) => (
                   <tr key={schedule.id} className="transition hover:bg-white/[0.02]">
                     <td className="px-2 py-3 sm:px-4 sm:py-4 lg:px-6 lg:py-5">
                       <div className="flex flex-col gap-0.5 sm:gap-1">
@@ -590,21 +820,32 @@ export function SchedulesClient({ initialSchedules }: SchedulesClientProps): JSX
                 >
                   Cliente
                 </Label>
-                <select
-                  id="schedule-client"
-                  value={selectedClientId}
-                  onChange={(event) => setSelectedClientId(event.target.value)}
-                  disabled={isSaving}
-                  className="h-10 sm:h-11 lg:h-12 rounded-full border border-white/15 bg-white/10 px-3 sm:px-4 text-sm sm:text-base text-white focus:outline-none focus:ring-2 focus:ring-yellow-400/50 disabled:opacity-50"
-                  required
-                >
-                  <option value="">Selecione um cliente</option>
-                  {clients.map((client) => (
-                    <option key={client.id} value={client.id} className="bg-black text-white">
-                      {client.name}
-                    </option>
-                  ))}
-                </select>
+                <div className="flex items-center gap-2">
+                  <select
+                    id="schedule-client"
+                    value={selectedClientId}
+                    onChange={(event) => setSelectedClientId(event.target.value)}
+                    disabled={isSaving}
+                    className="flex-1 h-10 sm:h-11 lg:h-12 rounded-full border border-white/15 bg-white/10 px-3 sm:px-4 text-sm sm:text-base text-white focus:outline-none focus:ring-2 focus:ring-yellow-400/50 disabled:opacity-50"
+                    required
+                  >
+                    <option value="">Selecione um cliente</option>
+                    {clients.map((client) => (
+                      <option key={client.id} value={client.id} className="bg-black text-white">
+                        {client.name}
+                      </option>
+                    ))}
+                  </select>
+                  <Button
+                    type="button"
+                    onClick={openClientDialog}
+                    disabled={isSaving}
+                    className="h-10 sm:h-11 lg:h-12 w-10 sm:w-11 lg:w-12 rounded-full bg-yellow-400 hover:bg-yellow-400/90 text-black p-0 flex-shrink-0 disabled:opacity-50"
+                    aria-label="Adicionar novo cliente"
+                  >
+                    <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
+                  </Button>
+                </div>
               </div>
 
               <div className="flex flex-col gap-2 sm:gap-3">
@@ -784,6 +1025,115 @@ export function SchedulesClient({ initialSchedules }: SchedulesClientProps): JSX
                 {isDeleting ? "Removendo..." : "Excluir"}
               </Button>
             </div>
+          </div>
+        </div>
+      ) : null}
+
+      {isClientDialogOpen ? (
+        <div
+          role="presentation"
+          className="fixed inset-0 z-40 flex items-center justify-center bg-black/75 px-3 py-4 sm:px-4 sm:py-6 backdrop-blur"
+          onClick={(event) => {
+            if (event.target === event.currentTarget && !isSavingClient) {
+              closeClientDialog();
+            }
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            className="relative w-full max-w-xl rounded-2xl sm:rounded-[28px] border border-white/15 bg-gradient-to-br from-black via-black/95 to-black/85 p-4 sm:p-6 lg:p-8 shadow-2xl max-h-[90vh] overflow-y-auto"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="space-y-1 sm:space-y-2 flex-1">
+                <h2 className="text-lg sm:text-xl lg:text-2xl font-semibold text-white">
+                  Adicionar cliente
+                </h2>
+                <p className="text-xs sm:text-sm leading-relaxed text-white/70">
+                  Preencha os dados do cliente para cadastrar no sistema.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="rounded-full p-1 text-white/60 transition hover:bg-white/10 hover:text-white flex-shrink-0"
+                onClick={closeClientDialog}
+                aria-label="Fechar modal"
+                disabled={isSavingClient}
+              >
+                <X className="h-4 w-4 sm:h-5 sm:w-5" />
+              </button>
+            </div>
+
+            <form className="mt-4 sm:mt-6 lg:mt-8 flex flex-col gap-4 sm:gap-5 lg:gap-6" onSubmit={handleCreateClient}>
+              <div className="flex flex-col gap-2 sm:gap-3">
+                <Label
+                  htmlFor="client-name"
+                  className="text-[10px] sm:text-[11px] lg:text-[12px] font-semibold uppercase tracking-[0.3em] sm:tracking-[0.35em] text-white/60"
+                >
+                  Nome
+                </Label>
+                <Input
+                  id="client-name"
+                  value={clientName}
+                  onChange={(event) => setClientName(event.target.value)}
+                  placeholder="Nome do cliente"
+                  disabled={isSavingClient}
+                  className="h-10 sm:h-11 lg:h-12 rounded-full border border-white/15 bg-white/10 text-sm sm:text-base text-white placeholder:text-white/40 focus-visible:ring-0 focus-visible:ring-offset-0 disabled:opacity-50"
+                  required
+                />
+              </div>
+
+              <div className="flex flex-col gap-2 sm:gap-3">
+                <Label
+                  htmlFor="client-email"
+                  className="text-[10px] sm:text-[11px] lg:text-[12px] font-semibold uppercase tracking-[0.3em] sm:tracking-[0.35em] text-white/60"
+                >
+                  Email
+                </Label>
+                <Input
+                  id="client-email"
+                  type="email"
+                  value={clientEmail}
+                  onChange={(event) => setClientEmail(event.target.value)}
+                  placeholder="email@exemplo.com"
+                  disabled={isSavingClient}
+                  className="h-10 sm:h-11 lg:h-12 rounded-full border border-white/15 bg-white/10 text-sm sm:text-base text-white placeholder:text-white/40 focus-visible:ring-0 focus-visible:ring-offset-0 disabled:opacity-50"
+                />
+              </div>
+
+              <div className="flex flex-col gap-2 sm:gap-3">
+                <Label
+                  htmlFor="client-whatsapp"
+                  className="text-[10px] sm:text-[11px] lg:text-[12px] font-semibold uppercase tracking-[0.3em] sm:tracking-[0.35em] text-white/60"
+                >
+                  WhatsApp
+                </Label>
+                <Input
+                  id="client-whatsapp"
+                  type="tel"
+                  value={clientWhatsapp}
+                  onChange={(event) => handleClientWhatsAppChange(event.target.value)}
+                  placeholder="(00) 00000-0000"
+                  disabled={isSavingClient}
+                  className="h-10 sm:h-11 lg:h-12 rounded-full border border-white/15 bg-white/10 text-sm sm:text-base text-white placeholder:text-white/40 focus-visible:ring-0 focus-visible:ring-offset-0 disabled:opacity-50"
+                />
+              </div>
+
+              {clientError ? <p className="text-xs sm:text-sm font-medium text-red-400">{clientError}</p> : null}
+
+              <div className="flex justify-end">
+                <Button
+                  type="submit"
+                  disabled={isSavingClient}
+                  className={cn(
+                    "w-full sm:w-auto min-w-[120px] sm:min-w-[160px] rounded-full bg-primary px-4 sm:px-6 lg:px-8 py-2 sm:py-2.5 lg:py-3 text-xs sm:text-sm font-semibold uppercase tracking-[0.2em] sm:tracking-[0.3em] text-black transition hover:bg-primary/90",
+                    isSavingClient && "cursor-not-allowed opacity-70",
+                  )}
+                >
+                  {isSavingClient ? "Salvando..." : "Salvar"}
+                </Button>
+              </div>
+            </form>
           </div>
         </div>
       ) : null}

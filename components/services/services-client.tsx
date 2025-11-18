@@ -35,7 +35,7 @@ export function ServicesClient({ initialServices }: ServicesClientProps): JSX.El
     { label: "Serviços", icon: "scissors", href: "/services" },
     { label: "Agendamentos", icon: "calendar-days", href: "/schedules" },
     { label: "Clientes", icon: "user", href: "/clients" },
-    { label: "Horários", icon: "clock", href: "/business-hours" },
+    { label: "Configurações", icon: "settings", href: "/config" },
   ];
 
   const currencyFormatter = useMemo(

@@ -1,17 +1,17 @@
-export default function BusinessHoursPage() {
+export default function ConfigPage() {
   return (
     <main className="min-h-screen bg-background text-foreground">
       <section className="container mx-auto flex flex-col gap-6 px-6 py-16">
         <header className="space-y-2">
           <p className="text-sm uppercase tracking-widest text-primary">
-            Horários
+            Configurações
           </p>
           <h1 className="text-4xl font-bold sm:text-5xl">
-            Funcionamento e disponibilidade
+            Configurações do Sistema
           </h1>
           <p className="max-w-2xl text-base text-foreground/80 sm:text-lg">
-            Confira os dias e horários de atendimento da barbearia, além de
-            informações sobre feriados e períodos especiais.
+            Gerencie os horários de funcionamento da barbearia, feriados e
+            outras configurações do sistema.
           </p>
         </header>
         <div className="grid gap-8 md:grid-cols-2">
@@ -49,3 +49,4 @@ export default function BusinessHoursPage() {
     </main>
   )
 }
+

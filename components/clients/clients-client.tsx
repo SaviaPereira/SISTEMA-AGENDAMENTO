@@ -36,7 +36,7 @@ export function ClientsClient({ initialClients }: ClientsClientProps): JSX.Eleme
     { label: "Serviços", icon: "scissors", href: "/services" },
     { label: "Agendamentos", icon: "calendar-days", href: "/schedules" },
     { label: "Clientes", icon: "user", href: "/clients" },
-    { label: "Horários", icon: "clock", href: "/business-hours" },
+    { label: "Configurações", icon: "settings", href: "/config" },
   ];
 
   const [clients, setClients] = useState<Client[]>(initialClients);
@@ -205,8 +205,15 @@ export function ClientsClient({ initialClients }: ClientsClientProps): JSX.Eleme
           .select("id, name, email, whatsapp, created_at, updated_at")
           .single();
 
-        if (insertError || !data) {
-          setError(insertError?.message ?? "Não foi possível criar o cliente.");
+        if (insertError) {
+          console.error("[clients] erro ao criar cliente:", insertError);
+          setError(insertError.message ?? "Não foi possível criar o cliente.");
+          return;
+        }
+
+        if (!data) {
+          console.error("[clients] erro: dados não retornados após inserção");
+          setError("Não foi possível criar o cliente. Dados não retornados.");
           return;
         }
 

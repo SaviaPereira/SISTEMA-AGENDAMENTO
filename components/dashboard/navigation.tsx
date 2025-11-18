@@ -5,11 +5,11 @@ import type { ComponentType, JSX } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { CalendarDays, Clock3, LayoutGrid, Scissors, User } from "lucide-react";
+import { CalendarDays, Clock3, LayoutGrid, Scissors, Settings, User } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
-type DashboardNavIcon = "layout-grid" | "scissors" | "calendar-days" | "clock" | "user";
+type DashboardNavIcon = "layout-grid" | "scissors" | "calendar-days" | "clock" | "user" | "settings";
 
 const iconComponents: Record<DashboardNavIcon, ComponentType<{ className?: string }>> = {
   "layout-grid": LayoutGrid,
@@ -17,6 +17,7 @@ const iconComponents: Record<DashboardNavIcon, ComponentType<{ className?: strin
   "calendar-days": CalendarDays,
   clock: Clock3,
   user: User,
+  settings: Settings,
 };
 
 export interface DashboardNavItem {

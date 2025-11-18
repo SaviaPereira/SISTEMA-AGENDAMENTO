@@ -46,7 +46,7 @@ const navigationItems: DashboardNavItem[] = [
   { label: "Serviços", icon: "scissors", href: "/services" },
   { label: "Agendamentos", icon: "calendar-days", href: "/schedules" },
   { label: "Clientes", icon: "user", href: "/clients" },
-  { label: "Horários", icon: "clock", href: "/business-hours" },
+  { label: "Configurações", icon: "settings", href: "/config" },
 ]
 
 export default async function DashboardPage() {
