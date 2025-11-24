@@ -3,7 +3,7 @@
 import type { JSX } from "react";
 import { useEffect, useMemo, useState } from "react";
 
-import { LogOut, Pencil, Plus, Trash2, X } from "lucide-react";
+import { LogOut, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 
 import { LogoutButton } from "@/components/logout-button";
 import {
@@ -45,6 +45,7 @@ export function ClientsClient({ initialClients }: ClientsClientProps): JSX.Eleme
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Client | null>(null);
@@ -53,6 +54,22 @@ export function ClientsClient({ initialClients }: ClientsClientProps): JSX.Eleme
   const [toast, setToast] = useState<{ message: string; variant: "success" | "error" } | null>(null);
 
   const supabase = useMemo(() => createClient(), []);
+
+  // Filter clients based on search term
+  const filteredClients = useMemo(() => {
+    if (!searchTerm.trim()) {
+      return clients;
+    }
+
+    const searchLower = searchTerm.toLowerCase().trim();
+    return clients.filter((client) => {
+      const nameMatch = client.name.toLowerCase().includes(searchLower);
+      const emailMatch = client.email?.toLowerCase().includes(searchLower) ?? false;
+      const whatsappMatch = client.whatsapp?.toLowerCase().includes(searchLower) ?? false;
+      
+      return nameMatch || emailMatch || whatsappMatch;
+    });
+  }, [clients, searchTerm]);
 
   function formatWhatsApp(whatsapp: string): string {
     if (!whatsapp) return "-";
@@ -318,6 +335,20 @@ export function ClientsClient({ initialClients }: ClientsClientProps): JSX.Eleme
           </div>
         </header>
 
+        {/* Search Input */}
+        <div className="mb-4 lg:mb-6">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+            <Input
+              type="text"
+              placeholder="Buscar cliente por nome, email ou WhatsApp..."
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              className="h-10 sm:h-11 lg:h-12 rounded-full border border-white/15 bg-white/10 pl-10 pr-4 text-sm sm:text-base text-white placeholder:text-white/40 focus-visible:ring-2 focus-visible:ring-yellow-400/50"
+            />
+          </div>
+        </div>
+
         <div className="overflow-x-auto overflow-hidden rounded-2xl lg:rounded-3xl border border-white/10 bg-black/40 shadow-inner shadow-black/20">
           <table className="min-w-full divide-y divide-white/10 text-left">
             <thead className="bg-white/[0.03] text-[10px] sm:text-xs uppercase tracking-[0.2em] sm:tracking-[0.3em] text-white/50">
@@ -329,14 +360,16 @@ export function ClientsClient({ initialClients }: ClientsClientProps): JSX.Eleme
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.08] text-xs sm:text-sm text-white/80">
-              {clients.length === 0 ? (
+              {filteredClients.length === 0 ? (
                 <tr>
                   <td colSpan={4} className="px-4 py-6 sm:px-6 sm:py-8 text-center text-white/60 text-xs sm:text-sm">
-                    Nenhum cliente cadastrado até o momento.
+                    {searchTerm.trim() 
+                      ? "Nenhum cliente encontrado com os critérios de busca." 
+                      : "Nenhum cliente cadastrado até o momento."}
                   </td>
                 </tr>
               ) : (
-                clients.map((client) => (
+                filteredClients.map((client) => (
                   <tr key={client.id} className="transition hover:bg-white/[0.02]">
                     <td className="px-2 py-3 sm:px-4 sm:py-4 lg:px-6 lg:py-5 text-xs sm:text-sm lg:text-base font-medium text-white">{client.name}</td>
                     <td className="px-2 py-3 sm:px-4 sm:py-4 lg:px-6 lg:py-5 text-xs sm:text-sm lg:text-base text-white/80">{client.email || "-"}</td>

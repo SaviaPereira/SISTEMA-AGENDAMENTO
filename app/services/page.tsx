@@ -9,6 +9,7 @@ type ServiceRow = {
   id: string;
   name: string;
   price: number;
+  duration: number | null;
   created_at: string;
   updated_at: string;
 };
@@ -33,7 +34,7 @@ export default async function ServicesPage(): Promise<JSX.Element> {
 
   const { data, error } = await supabase
     .from("services")
-    .select("id, name, price, created_at, updated_at")
+    .select("id, name, price, duration, created_at, updated_at")
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -53,6 +54,7 @@ export default async function ServicesPage(): Promise<JSX.Element> {
         id: service.id,
         name: service.name,
         price: service.price,
+        duration: service.duration ?? null,
         createdAt: service.created_at,
         updatedAt: service.updated_at,
       }))}

@@ -21,6 +21,7 @@ type Service = {
   id: string;
   name: string;
   price: number;
+  duration: number | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -54,6 +55,8 @@ export function ServicesClient({ initialServices }: ServicesClientProps): JSX.El
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [name, setName] = useState("");
   const [priceInput, setPriceInput] = useState<string>(zeroCurrency);
+  const [duration, setDuration] = useState<string>("30");
+  const [defaultServiceDuration, setDefaultServiceDuration] = useState<string>("30");
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Service | null>(null);
@@ -63,20 +66,68 @@ export function ServicesClient({ initialServices }: ServicesClientProps): JSX.El
 
   const supabase = useMemo(() => createClient(), []);
 
+  // Load default service duration from general settings
+  useEffect(() => {
+    async function loadDefaultDuration(): Promise<void> {
+      try {
+        const { data: settingsData, error: settingsError } = await supabase
+          .from("general_settings")
+          .select("default_service_duration")
+          .limit(1)
+          .single();
+
+        if (settingsError && settingsError.code !== "PGRST116") {
+          console.error("[services] erro ao carregar duração padrão:", settingsError);
+        } else if (settingsData?.default_service_duration) {
+          setDefaultServiceDuration(String(settingsData.default_service_duration));
+        }
+      } catch (error) {
+        console.error("[services] erro ao carregar duração padrão:", error);
+      }
+    }
+
+    loadDefaultDuration();
+  }, [supabase]);
+
   const formattedServices = useMemo(
     () =>
-      services.map((service) => ({
-        ...service,
-        formattedPrice: currencyFormatter.format(service.price ?? 0),
-      })),
+      services.map((service) => {
+        const hours = service.duration ? Math.floor(service.duration / 60) : 0;
+        const mins = service.duration ? service.duration % 60 : 0;
+        const formattedDuration = service.duration
+          ? hours > 0 
+            ? `${hours}h${mins > 0 ? ` ${mins}min` : ""}`.trim()
+            : `${service.duration}min`
+          : "-";
+        return {
+          ...service,
+          formattedPrice: currencyFormatter.format(service.price ?? 0),
+          formattedDuration,
+        };
+      }),
     [services, currencyFormatter],
   );
+
+  // Generate duration options from 15 min to 2 hours (120 min) in 15-minute intervals
+  const durationOptions = useMemo(() => {
+    const options = [];
+    for (let minutes = 15; minutes <= 120; minutes += 15) {
+      const hours = Math.floor(minutes / 60);
+      const mins = minutes % 60;
+      const label = hours > 0 
+        ? `${hours}h${mins > 0 ? ` ${mins}min` : ""}`.trim()
+        : `${minutes}min`;
+      options.push({ value: minutes.toString(), label });
+    }
+    return options;
+  }, []);
 
   function openCreateDialog(): void {
     setDialogMode("create");
     setEditingService(null);
     setName("");
     setPriceInput(zeroCurrency);
+    setDuration(defaultServiceDuration);
     setError(null);
   }
 
@@ -85,6 +136,7 @@ export function ServicesClient({ initialServices }: ServicesClientProps): JSX.El
     setEditingService(service);
     setName(service.name);
     setPriceInput(currencyFormatter.format(service.price ?? 0));
+    setDuration(service.duration?.toString() ?? defaultServiceDuration);
     setError(null);
   }
 
@@ -96,6 +148,7 @@ export function ServicesClient({ initialServices }: ServicesClientProps): JSX.El
     setEditingService(null);
     setName("");
     setPriceInput(zeroCurrency);
+    setDuration(defaultServiceDuration);
     setError(null);
   }
 
@@ -140,11 +193,12 @@ export function ServicesClient({ initialServices }: ServicesClientProps): JSX.El
 
     try {
       if (dialogMode === "edit" && editingService) {
+        const durationValue = parseInt(duration, 10);
         const { data, error: updateError } = await supabase
           .from("services")
-          .update({ name: trimmedName, price: numericPrice })
+          .update({ name: trimmedName, price: numericPrice, duration: durationValue })
           .eq("id", editingService.id)
-          .select("id, name, price, created_at, updated_at")
+          .select("id, name, price, duration, created_at, updated_at")
           .single();
 
         if (updateError || !data) {
@@ -156,6 +210,7 @@ export function ServicesClient({ initialServices }: ServicesClientProps): JSX.El
           id: data.id,
           name: data.name,
           price: typeof data.price === "number" ? data.price : Number(data.price ?? 0),
+          duration: data.duration ?? null,
           createdAt: data.created_at,
           updatedAt: data.updated_at,
         };
@@ -163,10 +218,11 @@ export function ServicesClient({ initialServices }: ServicesClientProps): JSX.El
         setServices((prev) => prev.map((service) => (service.id === updatedService.id ? updatedService : service)));
         setToast({ message: "Serviço atualizado com sucesso.", variant: "success" });
       } else {
+        const durationValue = parseInt(duration, 10);
         const { data, error: insertError } = await supabase
           .from("services")
-          .insert([{ name: trimmedName, price: numericPrice }])
-          .select("id, name, price, created_at, updated_at")
+          .insert([{ name: trimmedName, price: numericPrice, duration: durationValue }])
+          .select("id, name, price, duration, created_at, updated_at")
           .single();
 
         if (insertError || !data) {
@@ -178,6 +234,7 @@ export function ServicesClient({ initialServices }: ServicesClientProps): JSX.El
           id: data.id,
           name: data.name,
           price: typeof data.price === "number" ? data.price : Number(data.price ?? 0),
+          duration: data.duration ?? null,
           createdAt: data.created_at,
           updatedAt: data.updated_at,
         };
@@ -279,13 +336,14 @@ export function ServicesClient({ initialServices }: ServicesClientProps): JSX.El
               <tr>
                 <th className="px-6 py-4 text-yellow-400">Nome</th>
                 <th className="px-6 py-4 text-yellow-400">Preço</th>
+                <th className="px-6 py-4 text-yellow-400">Duração</th>
                 <th className="px-6 py-4 text-yellow-400 text-right">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.08] text-sm text-white/80">
               {formattedServices.length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="px-6 py-8 text-center text-white/60">
+                  <td colSpan={4} className="px-6 py-8 text-center text-white/60">
                     Nenhum serviço cadastrado até o momento.
                   </td>
                 </tr>
@@ -294,6 +352,7 @@ export function ServicesClient({ initialServices }: ServicesClientProps): JSX.El
                   <tr key={service.id} className="transition hover:bg-white/[0.02]">
                     <td className="px-6 py-5 text-base font-medium text-white">{service.name}</td>
                     <td className="px-6 py-5 text-base text-white/80">{service.formattedPrice}</td>
+                    <td className="px-6 py-5 text-base text-white/80">{service.formattedDuration}</td>
                     <td className="px-6 py-5">
                       <div className="flex items-center justify-end gap-3">
                         <button
@@ -397,6 +456,28 @@ export function ServicesClient({ initialServices }: ServicesClientProps): JSX.El
                 <span className="text-xs text-white/40">
                   Digite apenas números. O valor será formatado automaticamente.
                 </span>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <Label
+                  htmlFor="service-duration"
+                  className="text-[12px] font-semibold uppercase tracking-[0.35em] text-white/60"
+                >
+                  Duração
+                </Label>
+                <select
+                  id="service-duration"
+                  value={duration}
+                  onChange={(e) => setDuration(e.target.value)}
+                  disabled={isSaving}
+                  className="h-12 rounded-full border border-white/20 bg-black/70 px-4 text-base text-white focus:outline-none focus:ring-2 focus:ring-yellow-400/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {durationOptions.map((option) => (
+                    <option key={option.value} value={option.value} className="bg-black text-white">
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               {error ? <p className="text-sm font-medium text-red-400">{error}</p> : null}
