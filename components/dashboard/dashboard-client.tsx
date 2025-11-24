@@ -122,15 +122,24 @@ export function DashboardClient(): JSX.Element {
           ...new Set(todaySchedules?.map((s) => s.service_id) ?? []),
         ];
 
-        const { data: clientsData } =
-          clientIds.length > 0
-            ? await supabase.from("clients").select("id, name").in("id", clientIds)
-            : { data: null, error: null };
+        let clientsData: { id: string; name: string }[] | null = null;
+        let servicesData: { id: string; name: string }[] | null = null;
 
-        const { data: servicesData } =
-          serviceIds.length > 0
-            ? await supabase.from("services").select("id, name").in("id", serviceIds)
-            : { data: null, error: null };
+        if (clientIds.length > 0) {
+          const { data } = await supabase
+            .from("clients")
+            .select("id, name")
+            .in("id", clientIds);
+          clientsData = data;
+        }
+
+        if (serviceIds.length > 0) {
+          const { data } = await supabase
+            .from("services")
+            .select("id, name")
+            .in("id", serviceIds);
+          servicesData = data;
+        }
 
         const clientsMap = new Map(
           clientsData?.map((c) => [c.id, c.name]) ?? [],
