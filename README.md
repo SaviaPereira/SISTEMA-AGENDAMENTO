@@ -297,11 +297,6 @@ npm start
 
 ## 🔮 Roadmap
 
-- [ ] Notificações por WhatsApp
-- [ ] Relatórios e gráficos avançados
-- [ ] Exportação de dados (PDF/Excel)
-- [ ] Sistema de avaliações
-- [ ] App mobile (React Native)
 - [ ] Integração com pagamentos online
 
 ## 🎯 Diferenciais
