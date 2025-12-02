@@ -121,3 +121,43 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Estilo customizado para dia selecionado no calendário */
+@layer components {
+  /* Seletores para react-day-picker - texto amarelo e negrito, sem fundo */
+  button[aria-selected="true"].day_selected,
+  button.day_selected[aria-selected="true"],
+  .rdp button[aria-selected="true"],
+  button[aria-selected="true"],
+  [role="gridcell"] button[aria-selected="true"],
+  .rdp-day_selected,
+  .rdp-day_selected button {
+    background-color: transparent !important;
+    color: #D4AF37 !important;
+    font-weight: 700 !important;
+  }
+  
+  button[aria-selected="true"].day_selected:hover,
+  button.day_selected[aria-selected="true"]:hover,
+  .rdp button[aria-selected="true"]:hover,
+  button[aria-selected="true"]:hover,
+  [role="gridcell"] button[aria-selected="true"]:hover,
+  .rdp-day_selected:hover,
+  .rdp-day_selected button:hover {
+    background-color: transparent !important;
+    color: #D4AF37 !important;
+    font-weight: 700 !important;
+  }
+  
+  button[aria-selected="true"].day_selected:focus,
+  button.day_selected[aria-selected="true"]:focus,
+  .rdp button[aria-selected="true"]:focus,
+  button[aria-selected="true"]:focus,
+  [role="gridcell"] button[aria-selected="true"]:focus,
+  .rdp-day_selected:focus,
+  .rdp-day_selected button:focus {
+    background-color: transparent !important;
+    color: #D4AF37 !important;
+    font-weight: 700 !important;
+  }
+}

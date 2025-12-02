@@ -48,11 +48,12 @@ export async function updateSession(request: NextRequest) {
   const { data: sessionData } = await supabase.auth.getSession()
   const session = sessionData?.session
 
-  // Permite acesso público à página inicial e rotas de auth
+  // Permite acesso público à página inicial, rotas de auth e agendamento
   const isPublicRoute =
     request.nextUrl.pathname === '/' ||
     request.nextUrl.pathname.startsWith('/login') ||
-    request.nextUrl.pathname.startsWith('/auth')
+    request.nextUrl.pathname.startsWith('/auth') ||
+    request.nextUrl.pathname.startsWith('/agendamento')
 
   if (!session && !isPublicRoute) {
     // no session, potentially respond by redirecting the user to the login page

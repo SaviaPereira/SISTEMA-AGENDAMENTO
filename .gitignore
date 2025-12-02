@@ -49,3 +49,7 @@ next-env.d.ts
 # OS
 Thumbs.db
 supabase/.temp/
+
+# Migration scripts (temporários/auxiliares)
+supabase/migrations/EXECUTE_THIS_IN_SUPABASE.sql
+GUIA_EXECUTAR_MIGRATION.md
