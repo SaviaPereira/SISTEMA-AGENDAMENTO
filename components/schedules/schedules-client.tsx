@@ -2,6 +2,7 @@
 
 import type { JSX } from "react";
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { LogOut, MessageCircle, Pencil, Plus, Trash2, X } from "lucide-react";
 
@@ -32,6 +33,8 @@ type Schedule = {
   horaAgendada: string;
   status: "agendado" | "cancelado" | "pago" | "concluído";
   valor: number;
+  barberId: string | null;
+  barberName: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -66,6 +69,8 @@ const statusColors: Record<Schedule["status"], string> = {
 };
 
 export function SchedulesClient({ initialSchedules }: SchedulesClientProps): JSX.Element {
+  const router = useRouter();
+  
   const navigationItems: DashboardNavItem[] = [
     { label: "Dashboard", icon: "layout-grid", href: "/dashboard" },
     { label: "Serviços", icon: "scissors", href: "/services" },
@@ -308,17 +313,8 @@ export function SchedulesClient({ initialSchedules }: SchedulesClientProps): JSX
   }, [selectedServiceId, services, isDialogOpen, currencyFormatter, previousServiceId]);
 
   function openCreateDialog() {
-    setDialogMode("create");
-    setEditingSchedule(null);
-    setIsDialogOpen(true);
-    setSelectedClientId("");
-    setSelectedServiceId("");
-    setPreviousServiceId("");
-    setDataAgendada("");
-    setHoraAgendada("");
-    setStatus("agendado");
-    setValorInput(zeroCurrency);
-    setError(null);
+    // Redirecionar para a rota de agendamento ao invés de abrir modal
+    router.push("/agendamento");
   }
 
   function openEditDialog(schedule: Schedule) {
@@ -389,7 +385,18 @@ export function SchedulesClient({ initialSchedules }: SchedulesClientProps): JSX
     // Converter valor formatado para número
     const digitsOnly = valorInput.replace(/\D/g, "");
     const valorNumeric = Number(digitsOnly) / 100;
-    const valorToSave = Number.isNaN(valorNumeric) || valorNumeric === 0 ? null : valorNumeric;
+    
+    // Se o valor não for informado ou for 0, usar o preço do serviço
+    let valorToSave: number | null = null;
+    if (!Number.isNaN(valorNumeric) && valorNumeric > 0) {
+      valorToSave = valorNumeric;
+    } else {
+      // Buscar o preço do serviço selecionado
+      const selectedService = services.find((service) => service.id === selectedServiceId);
+      if (selectedService && selectedService.price > 0) {
+        valorToSave = selectedService.price;
+      }
+    }
 
     try {
       if (dialogMode === "edit" && editingSchedule) {
@@ -654,7 +661,7 @@ export function SchedulesClient({ initialSchedules }: SchedulesClientProps): JSX
         </div>
       </aside>
 
-      <main className="relative flex-1 px-3 sm:px-4 lg:px-6 xl:px-12 pb-24 sm:pb-28 pt-6 sm:pt-8 lg:pt-10 lg:pb-12">
+      <main className="relative flex-1 px-3 sm:px-4 lg:px-6 xl:px-8 pb-24 sm:pb-28 pt-6 sm:pt-8 lg:pt-10 lg:pb-12">
         <header className="flex flex-col gap-4 pb-6 lg:gap-6 lg:pb-10 lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-1 lg:space-y-2">
             <p className="text-xs lg:text-sm uppercase tracking-[0.35em] text-white/50">Painel</p>
@@ -688,23 +695,24 @@ export function SchedulesClient({ initialSchedules }: SchedulesClientProps): JSX
           hasActiveFilters={hasActiveFilters}
         />
 
-        <div className="mt-6 overflow-x-auto overflow-hidden rounded-2xl lg:rounded-3xl border border-white/10 bg-black/40 shadow-inner shadow-black/20">
-          <table className="min-w-full divide-y divide-white/10 text-left">
+        <div className="mt-6 overflow-x-auto rounded-2xl lg:rounded-3xl border border-white/10 bg-black/40 shadow-inner shadow-black/20">
+          <table className="w-full divide-y divide-white/10 text-left table-auto">
             <thead className="bg-white/[0.03] text-[10px] sm:text-xs uppercase tracking-[0.2em] sm:tracking-[0.3em] text-white/50">
               <tr>
-                <th className="px-2 py-2 sm:px-4 sm:py-3 lg:px-6 lg:py-4 text-yellow-400">Cliente</th>
-                <th className="px-2 py-2 sm:px-4 sm:py-3 lg:px-6 lg:py-4 text-yellow-400">Serviço</th>
-                <th className="px-2 py-2 sm:px-4 sm:py-3 lg:px-6 lg:py-4 text-yellow-400">Data</th>
-                <th className="px-2 py-2 sm:px-4 sm:py-3 lg:px-6 lg:py-4 text-yellow-400">Hora</th>
-                <th className="px-2 py-2 sm:px-4 sm:py-3 lg:px-6 lg:py-4 text-yellow-400">Valor</th>
-                <th className="px-2 py-2 sm:px-4 sm:py-3 lg:px-6 lg:py-4 text-yellow-400">Status</th>
-                <th className="px-2 py-2 sm:px-4 sm:py-3 lg:px-6 lg:py-4 text-yellow-400 text-right">Ações</th>
+                <th className="px-2 py-2 sm:px-4 sm:py-3 lg:px-4 lg:py-4 text-yellow-400">Cliente</th>
+                <th className="px-2 py-2 sm:px-4 sm:py-3 lg:px-4 lg:py-4 text-yellow-400">Serviço</th>
+                <th className="px-2 py-2 sm:px-4 sm:py-3 lg:px-3 lg:py-4 text-yellow-400 whitespace-nowrap">Data</th>
+                <th className="px-2 py-2 sm:px-4 sm:py-3 lg:px-3 lg:py-4 text-yellow-400 whitespace-nowrap">Hora</th>
+                <th className="px-2 py-2 sm:px-4 sm:py-3 lg:px-3 lg:py-4 text-yellow-400 whitespace-nowrap">Valor</th>
+                <th className="px-2 py-2 sm:px-4 sm:py-3 lg:px-3 lg:py-4 text-yellow-400 whitespace-nowrap">Status</th>
+                <th className="px-2 py-2 sm:px-4 sm:py-3 lg:px-4 lg:py-4 text-yellow-400">Barbeiro</th>
+                <th className="px-2 py-2 sm:px-4 sm:py-3 lg:px-4 lg:py-4 text-yellow-400 text-right whitespace-nowrap">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.08] text-xs sm:text-sm text-white/80">
               {filteredSchedules.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-6 sm:px-6 sm:py-8 text-center text-white/60 text-xs sm:text-sm">
+                  <td colSpan={8} className="px-4 py-6 sm:px-6 sm:py-8 text-center text-white/60 text-xs sm:text-sm">
                     {hasActiveFilters
                       ? "Nenhum agendamento encontrado com os filtros aplicados."
                       : "Nenhum agendamento cadastrado até o momento."}
@@ -713,7 +721,7 @@ export function SchedulesClient({ initialSchedules }: SchedulesClientProps): JSX
               ) : (
                 filteredSchedules.map((schedule) => (
                   <tr key={schedule.id} className="transition hover:bg-white/[0.02]">
-                    <td className="px-2 py-3 sm:px-4 sm:py-4 lg:px-6 lg:py-5">
+                    <td className="px-2 py-3 sm:px-4 sm:py-4 lg:px-4 lg:py-5">
                       <div className="flex flex-col gap-0.5 sm:gap-1">
                         <span className="text-xs sm:text-sm lg:text-base font-medium text-white">{schedule.clientName}</span>
                         {schedule.clientWhatsapp ? (
@@ -729,13 +737,13 @@ export function SchedulesClient({ initialSchedules }: SchedulesClientProps): JSX
                         ) : null}
                       </div>
                     </td>
-                    <td className="px-2 py-3 sm:px-4 sm:py-4 lg:px-6 lg:py-5 text-xs sm:text-sm lg:text-base text-white/80">{schedule.serviceName}</td>
-                    <td className="px-2 py-3 sm:px-4 sm:py-4 lg:px-6 lg:py-5 text-xs sm:text-sm lg:text-base text-white/80">{schedule.formattedDate}</td>
-                    <td className="px-2 py-3 sm:px-4 sm:py-4 lg:px-6 lg:py-5 text-xs sm:text-sm lg:text-base text-white/80">{schedule.formattedTime}</td>
-                    <td className="px-2 py-3 sm:px-4 sm:py-4 lg:px-6 lg:py-5 text-xs sm:text-sm lg:text-base text-white/80">
-                      {schedule.valor > 0 ? currencyFormatter.format(schedule.valor) : "-"}
+                    <td className="px-2 py-3 sm:px-4 sm:py-4 lg:px-4 lg:py-5 text-xs sm:text-sm lg:text-base text-white/80">{schedule.serviceName}</td>
+                    <td className="px-2 py-3 sm:px-4 sm:py-4 lg:px-3 lg:py-5 text-xs sm:text-sm lg:text-base text-white/80 whitespace-nowrap">{schedule.formattedDate}</td>
+                    <td className="px-2 py-3 sm:px-4 sm:py-4 lg:px-3 lg:py-5 text-xs sm:text-sm lg:text-base text-white/80 whitespace-nowrap">{schedule.formattedTime}</td>
+                    <td className="px-2 py-3 sm:px-4 sm:py-4 lg:px-3 lg:py-5 text-xs sm:text-sm lg:text-base text-white/80 whitespace-nowrap">
+                      {schedule.valor && schedule.valor > 0 ? currencyFormatter.format(schedule.valor) : "-"}
                     </td>
-                    <td className="px-2 py-3 sm:px-4 sm:py-4 lg:px-6 lg:py-5">
+                    <td className="px-2 py-3 sm:px-4 sm:py-4 lg:px-3 lg:py-5">
                       <span
                         className={cn(
                           "inline-flex items-center rounded-full border px-2 py-0.5 sm:px-3 sm:py-1 text-[10px] sm:text-xs font-semibold uppercase tracking-[0.05em] sm:tracking-[0.1em]",
@@ -745,7 +753,10 @@ export function SchedulesClient({ initialSchedules }: SchedulesClientProps): JSX
                         {statusLabels[schedule.status]}
                       </span>
                     </td>
-                    <td className="px-2 py-3 sm:px-4 sm:py-4 lg:px-6 lg:py-5">
+                    <td className="px-2 py-3 sm:px-4 sm:py-4 lg:px-4 lg:py-5 text-xs sm:text-sm lg:text-base text-white/80">
+                      {schedule.barberName ?? "-"}
+                    </td>
+                    <td className="px-2 py-3 sm:px-4 sm:py-4 lg:px-4 lg:py-5">
                       <div className="flex items-center justify-end gap-1.5 sm:gap-2 lg:gap-3">
                         <button
                           type="button"

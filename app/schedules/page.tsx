@@ -9,6 +9,7 @@ type ScheduleRow = {
   id: string;
   client_id: string;
   service_id: string;
+  barber_id: string | null;
   data_agendada: string;
   hora_agendada: string;
   status: "agendado" | "cancelado" | "pago" | "concluído";
@@ -20,6 +21,10 @@ type ScheduleRow = {
     whatsapp: string;
   } | null;
   services: {
+    name: string;
+    price: number;
+  } | null;
+  barbers: {
     name: string;
   } | null;
 };
@@ -44,7 +49,7 @@ export default async function SchedulesPage(): Promise<JSX.Element> {
 
   const { data: schedulesData, error: schedulesError } = await supabase
     .from("schedules")
-    .select("id, client_id, service_id, data_agendada, hora_agendada, status, valor, created_at, updated_at")
+    .select("id, client_id, service_id, barber_id, data_agendada, hora_agendada, status, valor, created_at, updated_at")
     .order("data_agendada", { ascending: false })
     .order("hora_agendada", { ascending: false });
 
@@ -56,6 +61,7 @@ export default async function SchedulesPage(): Promise<JSX.Element> {
   // Buscar dados relacionados separadamente
   const clientIds = [...new Set(schedulesData?.map((s) => s.client_id) ?? [])];
   const serviceIds = [...new Set(schedulesData?.map((s) => s.service_id) ?? [])];
+  const barberIds = [...new Set(schedulesData?.map((s) => s.barber_id).filter((id): id is string => id !== null) ?? [])];
 
   const { data: clientsData } = await supabase
     .from("clients")
@@ -64,13 +70,28 @@ export default async function SchedulesPage(): Promise<JSX.Element> {
 
   const { data: servicesData } = await supabase
     .from("services")
-    .select("id, name")
+    .select("id, name, price")
     .in("id", serviceIds);
+
+  // Buscar barbeiros (se houver barber_ids)
+  let barbersMap = new Map<string, { name: string }>();
+  if (barberIds.length > 0) {
+    const { data: barbersData } = await supabase
+      .from("barbers")
+      .select("id, name")
+      .in("id", barberIds);
+
+    barbersMap = new Map(
+      barbersData?.map((b) => [b.id, { name: b.name }]) ?? [],
+    );
+  }
 
   const clientsMap = new Map(
     clientsData?.map((c) => [c.id, { name: c.name, whatsapp: c.whatsapp ?? "" }]) ?? [],
   );
-  const servicesMap = new Map(servicesData?.map((s) => [s.id, s.name]) ?? []);
+  const servicesMap = new Map(
+    servicesData?.map((s) => [s.id, { name: s.name, price: typeof s.price === "number" ? s.price : Number(s.price ?? 0) }]) ?? [],
+  );
 
   const schedules: ScheduleRow[] =
     schedulesData?.map((schedule) => {
@@ -81,7 +102,15 @@ export default async function SchedulesPage(): Promise<JSX.Element> {
           name: clientData?.name ?? "Cliente não encontrado",
           whatsapp: clientData?.whatsapp ?? "",
         },
-        services: { name: servicesMap.get(schedule.service_id) ?? "Serviço não encontrado" },
+        services: {
+          name: servicesMap.get(schedule.service_id)?.name ?? "Serviço não encontrado",
+          price: servicesMap.get(schedule.service_id)?.price ?? 0,
+        },
+        barbers: schedule.barber_id
+          ? {
+              name: barbersMap.get(schedule.barber_id)?.name ?? "Barbeiro não encontrado",
+            }
+          : null,
       };
     }) ?? [];
 
@@ -97,7 +126,11 @@ export default async function SchedulesPage(): Promise<JSX.Element> {
         dataAgendada: schedule.data_agendada,
         horaAgendada: schedule.hora_agendada,
         status: schedule.status,
-        valor: typeof schedule.valor === "number" ? schedule.valor : Number(schedule.valor ?? 0),
+        valor: typeof schedule.valor === "number" && schedule.valor > 0
+          ? schedule.valor
+          : schedule.services?.price ?? 0,
+        barberId: schedule.barber_id ?? null,
+        barberName: schedule.barbers?.name ?? null,
         createdAt: schedule.created_at,
         updatedAt: schedule.updated_at,
       }))}
