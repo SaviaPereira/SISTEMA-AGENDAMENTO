@@ -411,7 +411,7 @@ export function SchedulesClient({ initialSchedules }: SchedulesClientProps): JSX
             valor: valorToSave,
           })
           .eq("id", editingSchedule.id)
-          .select("id, client_id, service_id, data_agendada, hora_agendada, status, valor, created_at, updated_at")
+          .select("id, client_id, service_id, barber_id, data_agendada, hora_agendada, status, valor, created_at, updated_at")
           .single();
 
         if (updateError || !data) {
@@ -424,9 +424,12 @@ export function SchedulesClient({ initialSchedules }: SchedulesClientProps): JSX
         }
 
         // Buscar dados relacionados para atualizar a lista
-        const [clientResult, serviceResult] = await Promise.all([
+        const [clientResult, serviceResult, barberResult] = await Promise.all([
           supabase.from("clients").select("name, whatsapp").eq("id", data.client_id).single(),
           supabase.from("services").select("name").eq("id", data.service_id).single(),
+          data.barber_id
+            ? supabase.from("barbers").select("name").eq("id", data.barber_id).single()
+            : Promise.resolve({ data: null, error: null }),
         ]);
 
         const updatedSchedule: Schedule = {
@@ -436,6 +439,8 @@ export function SchedulesClient({ initialSchedules }: SchedulesClientProps): JSX
           clientWhatsapp: clientResult.data?.whatsapp ?? "",
           serviceId: data.service_id,
           serviceName: serviceResult.data?.name ?? "Serviço não encontrado",
+          barberId: data.barber_id ?? null,
+          barberName: barberResult?.data?.name ?? null,
           dataAgendada: data.data_agendada,
           horaAgendada: data.hora_agendada,
           status: data.status as Schedule["status"],
@@ -459,7 +464,7 @@ export function SchedulesClient({ initialSchedules }: SchedulesClientProps): JSX
               valor: valorToSave,
             },
           ])
-          .select("id, client_id, service_id, data_agendada, hora_agendada, status, valor, created_at, updated_at")
+          .select("id, client_id, service_id, barber_id, data_agendada, hora_agendada, status, valor, created_at, updated_at")
           .single();
 
         if (insertError || !data) {
@@ -472,9 +477,12 @@ export function SchedulesClient({ initialSchedules }: SchedulesClientProps): JSX
         }
 
         // Buscar dados relacionados para atualizar a lista
-        const [clientResult, serviceResult] = await Promise.all([
+        const [clientResult, serviceResult, barberResult] = await Promise.all([
           supabase.from("clients").select("name, whatsapp").eq("id", data.client_id).single(),
           supabase.from("services").select("name").eq("id", data.service_id).single(),
+          data.barber_id
+            ? supabase.from("barbers").select("name").eq("id", data.barber_id).single()
+            : Promise.resolve({ data: null, error: null }),
         ]);
 
         const newSchedule: Schedule = {
@@ -484,6 +492,8 @@ export function SchedulesClient({ initialSchedules }: SchedulesClientProps): JSX
           clientWhatsapp: clientResult.data?.whatsapp ?? "",
           serviceId: data.service_id,
           serviceName: serviceResult.data?.name ?? "Serviço não encontrado",
+          barberId: data.barber_id ?? null,
+          barberName: barberResult?.data?.name ?? null,
           dataAgendada: data.data_agendada,
           horaAgendada: data.hora_agendada,
           status: data.status as Schedule["status"],
