@@ -875,7 +875,7 @@ export default function Agendamento() {
                       day_today: "bg-accent text-accent-foreground rounded-full",
                       day_disabled: "!opacity-30 !cursor-not-allowed !text-muted-foreground/40 hover:!bg-transparent hover:!text-muted-foreground/40 !pointer-events-none",
                     }}
-                    modifierClassNames={{
+                    modifiersClassNames={{
                       available: "!bg-[#D4AF37]/20 !text-foreground hover:!bg-[#D4AF37]/30 !font-medium !border !border-[#D4AF37]/30",
                       disabled_day: "!opacity-30 !cursor-not-allowed !text-muted-foreground/40 hover:!bg-transparent hover:!text-muted-foreground/40 !pointer-events-none",
                     }}
