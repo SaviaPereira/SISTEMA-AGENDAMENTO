@@ -412,14 +412,8 @@ export default function Agendamento() {
     return isDayDisabled(date)
   }
 
-  // Função para identificar dias disponíveis (para estilização)
+  // Função para identificar dias desabilitados (para estilização)
   const modifiers = {
-    available: (date: Date) => {
-      if (isDayDisabled(date)) return false
-      const today = startOfDay(new Date())
-      const dateToCheck = startOfDay(date)
-      return !isBefore(dateToCheck, today) && isDateSelectable(date)
-    },
     disabled_day: (date: Date) => isDayDisabled(date),
   }
 
@@ -876,7 +870,6 @@ export default function Agendamento() {
                       day_disabled: "!opacity-30 !cursor-not-allowed !text-muted-foreground/40 hover:!bg-transparent hover:!text-muted-foreground/40 !pointer-events-none",
                     }}
                     modifiersClassNames={{
-                      available: "!bg-[#D4AF37]/20 !text-foreground hover:!bg-[#D4AF37]/30 !font-medium !border !border-[#D4AF37]/30",
                       disabled_day: "!opacity-30 !cursor-not-allowed !text-muted-foreground/40 hover:!bg-transparent hover:!text-muted-foreground/40 !pointer-events-none",
                     }}
                   />
