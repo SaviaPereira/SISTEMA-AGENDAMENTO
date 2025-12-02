@@ -194,167 +194,186 @@ export default function Agendamento() {
     fetchBusinessHours()
   }, [])
 
-  // Gerar horários disponíveis baseado no dia selecionado e barbeiro
+  // Gerar horários disponíveis baseado no serviço selecionado, dia e agendamentos existentes
   useEffect(() => {
-    if (!date || !selectedBarber || businessHoursDays.length === 0 || businessHoursSlots.length === 0) {
+    // Só gera horários se tiver: serviço selecionado, data, barbeiro, e configurações de horários
+    if (!selectedService || !date || !selectedBarber || businessHoursDays.length === 0 || businessHoursSlots.length === 0) {
       setAvailableTimeSlots([])
       return
     }
 
-    const dayOfWeek = date.getDay()
-    const dayMap: Record<number, string> = {
-      0: "sunday",
-      1: "monday",
-      2: "tuesday",
-      3: "wednesday",
-      4: "thursday",
-      5: "friday",
-      6: "saturday",
-    }
-
-    const dayName = dayMap[dayOfWeek]
-    const dayData = businessHoursDays.find(
-      (day) => day.day_of_week.toLowerCase() === dayName
-    )
-
-    if (!dayData) {
-      setAvailableTimeSlots([])
-      return
-    }
-
-    // Buscar slots do dia selecionado
-    const daySlots = businessHoursSlots.filter((slot) => slot.day_id === dayData.id)
-
-    if (daySlots.length === 0) {
-      setAvailableTimeSlots([])
-      return
-    }
-
-    // Gerar lista de horários baseado nos slots
-    const timeSlots: string[] = []
-    
-    daySlots.forEach((slot) => {
-      const start = new Date(`2000-01-01T${slot.start_time}`)
-      const end = new Date(`2000-01-01T${slot.end_time}`)
-      
-      // Gerar intervalos de 30 minutos
-      let current = new Date(start)
-      while (current < end) {
-        const hours = current.getHours().toString().padStart(2, "0")
-        const minutes = current.getMinutes().toString().padStart(2, "0")
-        timeSlots.push(`${hours}:${minutes}`)
-        
-        // Adicionar 30 minutos
-        current.setMinutes(current.getMinutes() + 30)
-      }
-    })
-
-    // Remover duplicatas e ordenar
-    const uniqueTimeSlots = [...new Set(timeSlots)].sort()
-    
-    // Buscar horários já ocupados pelo barbeiro selecionado na data selecionada
-    async function filterOccupiedSlots() {
-      if (!selectedBarber || !date) {
-        setAvailableTimeSlots(uniqueTimeSlots)
-        return
-      }
-
+    async function generateAvailableSlots() {
       const client = createClient()
       const dateString = date.toISOString().split('T')[0] // Formato YYYY-MM-DD
-      
+
       try {
-        // Tentar buscar com barber_id primeiro
-        const { data: occupiedSchedules, error } = await client
-          .from("schedules")
-          .select("hora_agendada, barber_id")
-          .eq("data_agendada", dateString)
-          .eq("barber_id", selectedBarber)
-          .neq("status", "cancelado")
-
-        if (error) {
-          // Se o erro for relacionado à coluna barber_id não existir, tentar sem ela
-          const errorMessage = error.message || ""
-          const errorCode = error.code || ""
-          
-          if (errorMessage.includes("barber_id") || errorCode === "42703" || errorMessage.includes("column") && errorMessage.includes("does not exist")) {
-            console.warn("Coluna barber_id não encontrada, buscando sem filtro de barbeiro. Execute a migration para habilitar filtro por barbeiro.")
-            // Buscar sem filtro de barbeiro (compatibilidade durante migração)
-            const { data: allSchedules, error: allError } = await client
-              .from("schedules")
-              .select("hora_agendada")
-              .eq("data_agendada", dateString)
-              .neq("status", "cancelado")
-
-            if (allError) {
-              console.error("Erro ao buscar horários ocupados (sem barbeiro):", {
-                message: allError.message,
-                details: allError.details,
-                hint: allError.hint,
-                code: allError.code,
-              })
-              setAvailableTimeSlots(uniqueTimeSlots)
-              return
-            }
-
-            // Filtrar horários ocupados (todos os horários, já que não temos barber_id)
-            const occupiedTimes = (allSchedules || []).map((schedule) => {
-              const time = schedule.hora_agendada
-              if (typeof time === 'string' && time.includes(':')) {
-                const [hours, minutes] = time.split(':')
-                return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`
-              }
-              return time
-            })
-
-            const availableSlots = uniqueTimeSlots.filter((slot) => !occupiedTimes.includes(slot))
-            setAvailableTimeSlots(availableSlots)
-            
-            if (selectedTime && !availableSlots.includes(selectedTime)) {
-              setSelectedTime("")
-            }
-            return
-          }
-
-          console.error("Erro ao buscar horários ocupados:", {
-            message: error.message,
-            details: error.details,
-            hint: error.hint,
-            code: error.code,
-          })
-          setAvailableTimeSlots(uniqueTimeSlots)
+        // 1. Obter a duração do serviço selecionado
+        const selectedServiceData = services.find((s) => s.id === selectedService)
+        if (!selectedServiceData) {
+          setAvailableTimeSlots([])
           return
         }
 
-        // Usar os agendamentos já filtrados por barbeiro
-        const barberSchedules = occupiedSchedules || []
+        // Duração do serviço em minutos (default: 30 minutos se não definido)
+        const serviceDuration = selectedServiceData.duration ?? 30
 
-        // Converter horários ocupados para formato HH:MM
-        const occupiedTimes = barberSchedules.map((schedule) => {
-          const time = schedule.hora_agendada
-          // Se já está no formato HH:MM, retornar direto
-          if (typeof time === 'string' && time.includes(':')) {
-            const [hours, minutes] = time.split(':')
-            return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`
+        // 2. Obter o dia da semana selecionado
+        const dayOfWeek = date.getDay()
+        const dayMap: Record<number, string> = {
+          0: "sunday",
+          1: "monday",
+          2: "tuesday",
+          3: "wednesday",
+          4: "thursday",
+          5: "friday",
+          6: "saturday",
+        }
+
+        const dayName = dayMap[dayOfWeek]
+        const dayData = businessHoursDays.find(
+          (day) => day.day_of_week.toLowerCase() === dayName
+        )
+
+        if (!dayData) {
+          setAvailableTimeSlots([])
+          return
+        }
+
+        // 3. Buscar intervalos de atendimento do dia selecionado
+        const daySlots = businessHoursSlots.filter((slot) => slot.day_id === dayData.id)
+
+        if (daySlots.length === 0) {
+          setAvailableTimeSlots([])
+          return
+        }
+
+        // 4. Gerar todos os horários possíveis dentro dos intervalos (intervalos de 15 minutos)
+        const allPossibleTimeSlots: string[] = []
+
+        daySlots.forEach((slot) => {
+          const start = new Date(`2000-01-01T${slot.start_time}`)
+          const end = new Date(`2000-01-01T${slot.end_time}`)
+
+          // Gerar slots de 15 em 15 minutos
+          let current = new Date(start)
+          while (current < end) {
+            const hours = current.getHours().toString().padStart(2, "0")
+            const minutes = current.getMinutes().toString().padStart(2, "0")
+            allPossibleTimeSlots.push(`${hours}:${minutes}`)
+
+            // Adicionar 15 minutos
+            current.setMinutes(current.getMinutes() + 15)
           }
-          return time
         })
 
-        // Filtrar horários ocupados
-        const availableSlots = uniqueTimeSlots.filter((slot) => !occupiedTimes.includes(slot))
+        // Remover duplicatas e ordenar
+        const uniqueTimeSlots = [...new Set(allPossibleTimeSlots)].sort()
+
+        // 5. Buscar agendamentos existentes para o dia selecionado
+        let existingSchedules: Array<{ hora_agendada: string; service_id: string }> = []
+
+        try {
+          // Tentar buscar com filtro de barbeiro primeiro (se a coluna existir)
+          const { data: schedulesData, error: schedulesError } = await client
+            .from("schedules")
+            .select("hora_agendada, service_id")
+            .eq("data_agendada", dateString)
+            .neq("status", "cancelado")
+
+          if (schedulesError) {
+            // Se erro relacionado a barber_id, continuar sem filtro
+            console.warn("Erro ao buscar agendamentos:", schedulesError)
+          } else if (schedulesData) {
+            existingSchedules = schedulesData
+          }
+        } catch (error) {
+          console.error("Erro ao buscar agendamentos existentes:", error)
+        }
+
+        // 6. Buscar a duração de cada serviço dos agendamentos existentes
+        const occupiedMinutes = new Set<string>()
+
+        for (const schedule of existingSchedules) {
+          const scheduleService = services.find((s) => s.id === schedule.service_id)
+          const scheduleServiceDuration = scheduleService?.duration ?? 30
+
+          // Calcular todos os minutos ocupados por este agendamento
+          const [startHours, startMinutes] = schedule.hora_agendada.split(":").map(Number)
+          const startTotalMinutes = startHours * 60 + startMinutes
+          const endTotalMinutes = startTotalMinutes + scheduleServiceDuration
+
+          // Adicionar cada minuto ocupado ao conjunto
+          for (let minute = startTotalMinutes; minute < endTotalMinutes; minute += 15) {
+            const hours = Math.floor(minute / 60)
+            const mins = minute % 60
+            const timeString = `${hours.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}`
+            occupiedMinutes.add(timeString)
+          }
+        }
+
+        // 7. Filtrar horários disponíveis
+        // Um horário está disponível se:
+        // - O horário inicial está disponível
+        // - Todos os minutos até o fim do serviço estão disponíveis
+        const availableSlots: string[] = []
+
+        for (const slot of uniqueTimeSlots) {
+          const [slotHours, slotMinutes] = slot.split(":").map(Number)
+          const slotTotalMinutes = slotHours * 60 + slotMinutes
+          const serviceEndTotalMinutes = slotTotalMinutes + serviceDuration
+
+          // Verificar se o serviço cabe dentro dos intervalos de atendimento
+          let fitsInInterval = false
+          for (const daySlot of daySlots) {
+            const intervalStart = new Date(`2000-01-01T${daySlot.start_time}`)
+            const intervalEnd = new Date(`2000-01-01T${daySlot.end_time}`)
+            const intervalStartMinutes = intervalStart.getHours() * 60 + intervalStart.getMinutes()
+            const intervalEndMinutes = intervalEnd.getHours() * 60 + intervalEnd.getMinutes()
+
+            if (slotTotalMinutes >= intervalStartMinutes && serviceEndTotalMinutes <= intervalEndMinutes) {
+              fitsInInterval = true
+              break
+            }
+          }
+
+          if (!fitsInInterval) {
+            continue
+          }
+
+          // Verificar se todos os minutos necessários estão disponíveis
+          // Verificar todos os intervalos de 15 minutos desde o início até o fim do serviço
+          let allMinutesAvailable = true
+          for (let minute = slotTotalMinutes; minute < serviceEndTotalMinutes; minute += 15) {
+            const hours = Math.floor(minute / 60)
+            const mins = minute % 60
+            const timeString = `${hours.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}`
+
+            // Verificar se este intervalo de 15 minutos está ocupado
+            if (occupiedMinutes.has(timeString)) {
+              allMinutesAvailable = false
+              break
+            }
+          }
+
+          if (allMinutesAvailable) {
+            availableSlots.push(slot)
+          }
+        }
+
         setAvailableTimeSlots(availableSlots)
-        
+
         // Limpar seleção de horário se o horário atual não estiver mais disponível
         if (selectedTime && !availableSlots.includes(selectedTime)) {
           setSelectedTime("")
         }
       } catch (error) {
-        console.error("Erro ao filtrar horários ocupados:", error)
-        setAvailableTimeSlots(uniqueTimeSlots)
+        console.error("Erro ao gerar horários disponíveis:", error)
+        setAvailableTimeSlots([])
       }
     }
 
-    filterOccupiedSlots()
-  }, [date, selectedBarber, businessHoursDays, businessHoursSlots, selectedTime])
+    generateAvailableSlots()
+  }, [selectedService, date, selectedBarber, businessHoursDays, businessHoursSlots, services, selectedTime])
 
   // Função para verificar se uma data pode ser selecionada
   const isDateSelectable = (date: Date): boolean => {
@@ -711,9 +730,9 @@ export default function Agendamento() {
   const canEditNameEmail = !isClientFound && phone.replace(/\D/g, "").length >= 10
   const canSelectService = (isClientFound || (name.trim() !== "" && email.trim() !== "")) && !isSearchingClient
   const canSelectBarber = selectedService !== "" && canSelectService
-  const canSelectDate = selectedBarber !== "" && canSelectBarber
-  const canSelectTime = date !== undefined && canSelectDate
-  const canSchedule = selectedTime !== "" && canSelectTime && selectedBarber !== ""
+  const canSelectDate = selectedService !== "" && selectedBarber !== "" && canSelectBarber
+  const canSelectTime = date !== undefined && canSelectDate && selectedService !== ""
+  const canSchedule = selectedTime !== "" && canSelectTime && selectedBarber !== "" && selectedService !== ""
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -792,7 +811,7 @@ export default function Agendamento() {
                         onValueChange={(value) => {
                           setSelectedService(value)
                           // Limpar seleções dependentes quando serviço mudar
-                          setSelectedBarber("")
+                          // Manter barbeiro selecionado, mas limpar data e horário
                           setDate(undefined)
                           setSelectedTime("")
                         }}
