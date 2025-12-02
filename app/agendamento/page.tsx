@@ -203,6 +203,12 @@ export default function Agendamento() {
     }
 
     async function generateAvailableSlots() {
+      // Verificar novamente se date, selectedService e selectedBarber existem (TypeScript safety)
+      if (!date || !selectedService || !selectedBarber) {
+        setAvailableTimeSlots([])
+        return
+      }
+
       const client = createClient()
       const dateString = date.toISOString().split('T')[0] // Formato YYYY-MM-DD
 
