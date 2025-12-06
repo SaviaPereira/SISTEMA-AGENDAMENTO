@@ -13,7 +13,6 @@ import { cn } from "@/lib/utils";
 export function GeneralSettingsForm(): JSX.Element {
   const [requirePaymentBeforeBooking, setRequirePaymentBeforeBooking] = useState(false);
   const [defaultServiceDuration, setDefaultServiceDuration] = useState("30");
-  const [maxBookingsPerClientPerDay, setMaxBookingsPerClientPerDay] = useState(3);
   const [customBookingMessage, setCustomBookingMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -53,7 +52,6 @@ export function GeneralSettingsForm(): JSX.Element {
         } else if (settingsData) {
           setRequirePaymentBeforeBooking(settingsData.require_payment_before_booking ?? false);
           setDefaultServiceDuration(String(settingsData.default_service_duration ?? 30));
-          setMaxBookingsPerClientPerDay(settingsData.max_bookings_per_client_per_day ?? 3);
           setCustomBookingMessage(settingsData.custom_booking_message ?? "");
         }
 
@@ -282,7 +280,6 @@ export function GeneralSettingsForm(): JSX.Element {
       const settingsData = {
         require_payment_before_booking: requirePaymentBeforeBooking,
         default_service_duration: parseInt(defaultServiceDuration, 10),
-        max_bookings_per_client_per_day: maxBookingsPerClientPerDay,
         custom_booking_message: customBookingMessage || null,
       };
 
@@ -414,35 +411,6 @@ export function GeneralSettingsForm(): JSX.Element {
                 </option>
               ))}
             </select>
-          </div>
-        </div>
-
-        {/* Limite de Agendamentos por Cliente */}
-        <div className="rounded-xl border border-white/10 bg-black/40 p-6">
-          <div className="space-y-3">
-            <div>
-              <h4 className="text-base font-semibold text-white mb-1">
-                Limite de Agendamentos por Cliente
-              </h4>
-              <p className="text-sm text-white/60">
-                Máximo de agendamentos por cliente por dia
-              </p>
-              <p className="text-xs text-white/50 mt-2">
-                Isso vai evitar abusos de agendamento por parte de um cliente
-              </p>
-            </div>
-            <input
-              type="number"
-              value={maxBookingsPerClientPerDay}
-              onChange={(e) => {
-                const value = parseInt(e.target.value, 10);
-                if (!isNaN(value) && value >= 1) {
-                  setMaxBookingsPerClientPerDay(value);
-                }
-              }}
-              min="1"
-              className="h-10 w-full max-w-xs rounded-lg border border-white/20 bg-white/10 px-4 text-sm text-white focus:outline-none focus:ring-2 focus:ring-yellow-400/50"
-            />
           </div>
         </div>
 
