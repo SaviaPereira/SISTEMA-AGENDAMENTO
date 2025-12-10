@@ -23,6 +23,8 @@ import {
 import { ptBR } from "date-fns/locale"
 import { startOfDay, isBefore } from "date-fns"
 import { createClient } from "@/lib/client"
+import Link from "next/link"
+import { ArrowLeft } from "lucide-react"
 
 type Client = {
   id: string
@@ -193,6 +195,8 @@ export default function Agendamento() {
 
     fetchBusinessHours()
   }, [])
+
+  // (Removido) Busca de mensagem personalizada de agendamento
 
   // Gerar horários disponíveis baseado no serviço selecionado, dia e agendamentos existentes
   useEffect(() => {
@@ -743,6 +747,18 @@ export default function Agendamento() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="w-full max-w-5xl">
+        <div className="mb-4">
+          <Link href="/">
+            <Button
+              variant="outline"
+              size="icon"
+              className="rounded-full border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+              aria-label="Voltar para a página inicial"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+          </Link>
+        </div>
         <Card className="border-border">
           <CardContent className="p-6">
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-6 lg:gap-8 items-start">
@@ -944,7 +960,7 @@ export default function Agendamento() {
 
       {/* Dialog de Confirmação de Agendamento */}
       <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
-        <DialogContent className="sm:max-w-md bg-card border-border">
+        <DialogContent className="sm-max-w-md bg-card border-border">
           <DialogHeader>
             <DialogTitle className="text-center text-lg font-bold text-[#D4AF37] whitespace-nowrap">
               Obrigado por agendar na Barbearia Gamboa!

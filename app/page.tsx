@@ -1,8 +1,9 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Facebook, Instagram, ArrowRight, Star } from "lucide-react";
+import { Facebook, Instagram } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -27,16 +28,21 @@ export default function Home() {
 
           {/* Redes Sociais - Posicionadas no painel direito */}
           <div className="lg:absolute lg:top-6 lg:right-6 flex items-center space-x-4">
-            <a href="#" className="text-primary hover:text-accent transition-colors">
-              <Facebook className="w-6 h-6" />
+            <a 
+              href="https://www.facebook.com/Gamboaforhall" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-primary hover:text-accent transition-colors"
+            >
+              <Facebook className="w-8 h-8" />
             </a>
-            <a href="#" className="text-primary hover:text-accent transition-colors">
-              <Instagram className="w-6 h-6" />
-            </a>
-            <a href="#" className="text-primary hover:text-accent transition-colors">
-              <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
-                <span className="text-primary-foreground text-xs font-bold">T</span>
-              </div>
+            <a 
+              href="https://www.instagram.com/gamboabarbearia?igsh=MTc3aDNvNmtmOTRwOA==" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-primary hover:text-accent transition-colors"
+            >
+              <Instagram className="w-8 h-8" />
             </a>
           </div>
         </div>
@@ -63,12 +69,21 @@ export default function Home() {
 
             {/* Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-6 text-lg font-medium">
-                Agendar Horário
-              </Button>
-              <Button size="lg" className="bg-background border border-primary text-primary hover:bg-primary hover:text-primary-foreground px-8 py-6 text-lg font-medium">
-                Entre em Contato
-              </Button>
+              <Link href="/agendamento">
+                <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-6 text-lg font-medium">
+                  Agendar Horário
+                </Button>
+              </Link>
+              <a 
+                href="https://share.google/cPlEIE076xE0TmEp1" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-block"
+              >
+                <Button size="lg" className="bg-background border border-primary text-primary hover:bg-primary hover:text-primary-foreground px-8 py-6 text-lg font-medium">
+                  Nossa Localização
+                </Button>
+              </a>
             </div>
           </div>
         </div>
@@ -88,46 +103,24 @@ export default function Home() {
             <div className="absolute inset-0 bg-black/20"></div>
           </div>
 
-          {/* Card Pacote Mensal - Top Right (oculto em telas menores) */}
-          <div className="hidden lg:block absolute top-20 right-8 z-10">
-            <div className="bg-primary text-primary-foreground p-4 rounded-lg shadow-xl max-w-xs">
-              <div className="flex items-center space-x-3 mb-2">
-                <div className="w-8 h-8 bg-primary-foreground/20 rounded-full flex items-center justify-center">
-                  <span className="text-primary-foreground text-sm">💰</span>
-                </div>
-                <span className="font-semibold text-sm text-primary-foreground">Pacote mensal</span>
-              </div>
-              <div className="text-2xl font-bold text-primary-foreground">R$ 95,00</div>
-            </div>
-          </div>
 
           {/* Card de Avaliação - Bottom Right (oculto em telas menores) */}
           <div className="hidden lg:block absolute bottom-20 right-8 max-w-sm z-10">
             <div className="bg-primary text-primary-foreground p-6 rounded-lg shadow-xl">
-              <div className="flex items-center justify-between mb-4">
-                <span className="font-semibold text-primary-foreground">Recados</span>
-                <ArrowRight className="w-4 h-4 text-primary-foreground" />
-              </div>
-              
               <div className="flex items-center space-x-3 mb-4">
                 <div className="w-10 h-10 bg-primary-foreground/20 rounded-full flex items-center justify-center">
                   <span className="text-primary-foreground text-sm font-bold">DG</span>
                 </div>
                 <div>
                   <div className="font-semibold text-primary-foreground">Diretoria Gamboa</div>
-                  <div className="text-sm opacity-75 text-primary-foreground">2 meses atrás</div>
                 </div>
               </div>
 
-              <div className="flex items-center space-x-1 mb-3">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-current text-primary-foreground" />
-                ))}
-              </div>
 
               <p className="text-sm leading-relaxed text-primary-foreground">
-                "Detalhe é atitude. Aqui, seu visual ganha identidade.
-                  Do degradê ao navalhado, aqui o corte é feito na régua e com atenção."
+                Aqui, seu visual ganha identidade...
+                <br />
+                  Do degradê ao navalhado, o corte é feito na régua!
               </p>
             </div>
           </div>
