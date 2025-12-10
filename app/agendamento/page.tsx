@@ -960,12 +960,12 @@ export default function Agendamento() {
 
       {/* Dialog de Confirmação de Agendamento */}
       <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
-        <DialogContent className="sm-max-w-md bg-card border-border">
-          <DialogHeader>
-            <DialogTitle className="text-center text-lg font-bold text-[#D4AF37] whitespace-nowrap">
+        <DialogContent className="bg-card border-border w-[calc(100vw-2rem)] max-w-[420px] sm:max-w-md px-5 py-6">
+          <DialogHeader className="mt-2 space-y-3 text-center">
+            <DialogTitle className="text-center text-lg sm:text-xl font-bold text-[#D4AF37]">
               Obrigado por agendar na Barbearia Gamboa!
             </DialogTitle>
-            <DialogDescription className="text-center text-muted-foreground mt-4">
+            <DialogDescription className="text-center text-sm sm:text-base text-muted-foreground">
               Seu agendamento foi criado com sucesso.
             </DialogDescription>
           </DialogHeader>
